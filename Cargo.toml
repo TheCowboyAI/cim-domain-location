@@ -12,6 +12,7 @@ categories = ["data-structures", "asynchronous"]
 [dependencies]
 # Core dependencies
 cim-core-domain = { path = "../cim-core-domain" }
+cim-domain = { path = "../cim-domain" }
 cim-infrastructure = { path = "../cim-infrastructure" }
 
 # Async runtime

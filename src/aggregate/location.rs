@@ -3,7 +3,7 @@
 //! Location is an aggregate that can represent any identifiable place through
 //! various means: addresses, geo-coordinates, virtual locations, etc.
 
-use cim_core_domain::{AggregateRoot, entity::{Entity, EntityId}, DomainError, DomainResult};
+use cim_domain::{AggregateRoot, Entity, EntityId, DomainError, DomainResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

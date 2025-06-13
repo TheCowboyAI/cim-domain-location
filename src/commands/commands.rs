@@ -1,7 +1,7 @@
 //! Location commands
 
 use crate::{LocationType, Address, GeoCoordinates, VirtualLocation};
-use cim_core_domain::{Command, entity::EntityId};
+use cim_domain::{Command, EntityId};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

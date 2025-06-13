@@ -4,7 +4,7 @@ use cim_domain_location::{
     Location, LocationType, Address, GeoCoordinates,
     DefineLocation, LocationDefined,
 };
-use cim_core_domain::entity::EntityId;
+use cim_domain::EntityId;
 
 #[test]
 fn test_location_creation() {

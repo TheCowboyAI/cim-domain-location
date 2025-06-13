@@ -1,7 +1,7 @@
 //! Location domain events
 
 use crate::{LocationType, Address, GeoCoordinates, VirtualLocation};
-use cim_core_domain::DomainEvent;
+use cim_domain::DomainEvent;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
