@@ -1,6 +1,6 @@
 //! Location commands
 
-use crate::{LocationType, Address, GeoCoordinates, VirtualLocation};
+use crate::aggregate::{LocationType, Address, GeoCoordinates, VirtualLocation, LocationMarker};
 use cim_domain::{Command, EntityId};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -29,7 +29,7 @@ pub struct DefineLocation {
 pub struct LocationAggregate;
 
 impl Command for DefineLocation {
-    type Aggregate = LocationAggregate;
+    type Aggregate = LocationMarker;
 
     fn aggregate_id(&self) -> Option<EntityId<Self::Aggregate>> {
         Some(EntityId::from_uuid(self.location_id))

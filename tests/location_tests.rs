@@ -1,8 +1,8 @@
 //! Integration tests for location domain
 
 use cim_domain_location::{
-    Location, LocationType, Address, GeoCoordinates,
-    DefineLocation, LocationDefined,
+    Location, Address, GeoCoordinates,
+    aggregate::LocationType,
 };
 use cim_domain::EntityId;
 

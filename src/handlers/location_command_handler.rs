@@ -1,6 +1,7 @@
 //! Location command handler
 
-use crate::{Location, DefineLocation, LocationDefined, LocationType, Address, GeoCoordinates};
+use crate::aggregate::{Location, LocationType, Address, GeoCoordinates};
+use crate::{DefineLocation, LocationDefined};
 use cim_domain::{
     CommandHandler, CommandEnvelope, CommandAcknowledgment, CommandStatus,
     AggregateRepository, EventPublisher, EntityId,
@@ -132,7 +133,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                 }
 
                 // Emit event
-                let event = LocationDomainEvent::LocationDefined(LocationDefined {
+                let _event = LocationDomainEvent::LocationDefined(LocationDefined {
                     location_id: cmd.location_id,
                     name: cmd.name.clone(),
                     location_type: cmd.location_type.clone(),
