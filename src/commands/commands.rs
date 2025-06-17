@@ -3,6 +3,7 @@
 use crate::aggregate::{LocationType, Address, GeoCoordinates, VirtualLocation, LocationMarker};
 use cim_domain::{Command, EntityId};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 /// Define a new location
@@ -24,13 +25,130 @@ pub struct DefineLocation {
     pub parent_id: Option<Uuid>,
 }
 
-/// Marker for location aggregate
-#[derive(Debug)]
-pub struct LocationAggregate;
+/// Update an existing location's details
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateLocation {
+    /// Location's unique ID
+    pub location_id: Uuid,
+    /// New name (optional)
+    pub name: Option<String>,
+    /// New address (optional)
+    pub address: Option<Address>,
+    /// New coordinates (optional)
+    pub coordinates: Option<GeoCoordinates>,
+    /// New virtual location details (optional)
+    pub virtual_location: Option<VirtualLocation>,
+    /// Reason for update
+    pub reason: String,
+}
 
+/// Set parent location for hierarchical structures
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SetParentLocation {
+    /// Child location ID
+    pub location_id: Uuid,
+    /// Parent location ID
+    pub parent_id: Uuid,
+    /// Reason for setting parent
+    pub reason: String,
+}
+
+/// Remove parent location (make top-level)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RemoveParentLocation {
+    /// Location ID to make top-level
+    pub location_id: Uuid,
+    /// Reason for removing parent
+    pub reason: String,
+}
+
+/// Add metadata to a location
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AddLocationMetadata {
+    /// Location ID
+    pub location_id: Uuid,
+    /// Metadata to add
+    pub metadata: HashMap<String, String>,
+    /// Reason for adding metadata
+    pub reason: String,
+}
+
+/// Archive a location (soft delete)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ArchiveLocation {
+    /// Location ID to archive
+    pub location_id: Uuid,
+    /// Reason for archiving
+    pub reason: String,
+}
+
+/// Base trait for location commands
+pub trait LocationCommand {
+    fn location_id(&self) -> Uuid;
+}
+
+impl LocationCommand for DefineLocation {
+    fn location_id(&self) -> Uuid { self.location_id }
+}
+
+impl LocationCommand for UpdateLocation {
+    fn location_id(&self) -> Uuid { self.location_id }
+}
+
+impl LocationCommand for SetParentLocation {
+    fn location_id(&self) -> Uuid { self.location_id }
+}
+
+impl LocationCommand for RemoveParentLocation {
+    fn location_id(&self) -> Uuid { self.location_id }
+}
+
+impl LocationCommand for AddLocationMetadata {
+    fn location_id(&self) -> Uuid { self.location_id }
+}
+
+impl LocationCommand for ArchiveLocation {
+    fn location_id(&self) -> Uuid { self.location_id }
+}
+
+// Command implementations
 impl Command for DefineLocation {
     type Aggregate = LocationMarker;
+    fn aggregate_id(&self) -> Option<EntityId<Self::Aggregate>> {
+        Some(EntityId::from_uuid(self.location_id))
+    }
+}
 
+impl Command for UpdateLocation {
+    type Aggregate = LocationMarker;
+    fn aggregate_id(&self) -> Option<EntityId<Self::Aggregate>> {
+        Some(EntityId::from_uuid(self.location_id))
+    }
+}
+
+impl Command for SetParentLocation {
+    type Aggregate = LocationMarker;
+    fn aggregate_id(&self) -> Option<EntityId<Self::Aggregate>> {
+        Some(EntityId::from_uuid(self.location_id))
+    }
+}
+
+impl Command for RemoveParentLocation {
+    type Aggregate = LocationMarker;
+    fn aggregate_id(&self) -> Option<EntityId<Self::Aggregate>> {
+        Some(EntityId::from_uuid(self.location_id))
+    }
+}
+
+impl Command for AddLocationMetadata {
+    type Aggregate = LocationMarker;
+    fn aggregate_id(&self) -> Option<EntityId<Self::Aggregate>> {
+        Some(EntityId::from_uuid(self.location_id))
+    }
+}
+
+impl Command for ArchiveLocation {
+    type Aggregate = LocationMarker;
     fn aggregate_id(&self) -> Option<EntityId<Self::Aggregate>> {
         Some(EntityId::from_uuid(self.location_id))
     }

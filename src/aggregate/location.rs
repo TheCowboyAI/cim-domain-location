@@ -36,6 +36,9 @@ pub struct Location {
 
     /// Additional metadata
     pub metadata: HashMap<String, String>,
+
+    /// Whether this location is archived (soft deleted)
+    pub archived: bool,
 }
 
 /// Marker type for Location entities
@@ -43,7 +46,7 @@ pub struct Location {
 pub struct LocationMarker;
 
 /// Types of locations
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum LocationType {
     /// Physical location with real-world presence
     Physical,
@@ -128,6 +131,7 @@ impl Location {
             virtual_location: None,
             parent_id: None,
             metadata: HashMap::new(),
+            archived: false,
         })
     }
 
@@ -147,6 +151,7 @@ impl Location {
             virtual_location: Some(virtual_location),
             parent_id: None,
             metadata: HashMap::new(),
+            archived: false,
         })
     }
 
@@ -168,6 +173,7 @@ impl Location {
             virtual_location: None,
             parent_id: None,
             metadata: HashMap::new(),
+            archived: false,
         })
     }
 
@@ -219,6 +225,95 @@ impl Location {
     pub fn add_metadata(&mut self, key: String, value: String) {
         self.metadata.insert(key, value);
         self.entity.touch();
+    }
+
+    /// Update location details
+    pub fn update_details(
+        &mut self,
+        name: Option<String>,
+        address: Option<Address>,
+        coordinates: Option<GeoCoordinates>,
+        virtual_location: Option<VirtualLocation>,
+    ) -> DomainResult<()> {
+        if self.archived {
+            return Err(DomainError::ValidationError(
+                "Cannot update archived location".to_string()
+            ));
+        }
+
+        // Validate new address if provided
+        if let Some(ref addr) = address {
+            addr.validate()?;
+        }
+
+        // Validate new coordinates if provided
+        if let Some(ref coords) = coordinates {
+            coords.validate()?;
+        }
+
+        // Apply updates
+        if let Some(new_name) = name {
+            self.name = new_name;
+        }
+
+        if let Some(new_address) = address {
+            self.address = Some(new_address);
+        }
+
+        if let Some(new_coordinates) = coordinates {
+            self.coordinates = Some(new_coordinates);
+        }
+
+        if let Some(new_virtual_location) = virtual_location {
+            self.virtual_location = Some(new_virtual_location);
+        }
+
+        self.entity.touch();
+        Ok(())
+    }
+
+    /// Add multiple metadata entries
+    pub fn add_metadata_bulk(&mut self, metadata: HashMap<String, String>) {
+        for (key, value) in metadata {
+            self.metadata.insert(key, value);
+        }
+        self.entity.touch();
+    }
+
+    /// Remove parent (make top-level)
+    pub fn remove_parent(&mut self) -> DomainResult<()> {
+        if self.archived {
+            return Err(DomainError::ValidationError(
+                "Cannot modify archived location".to_string()
+            ));
+        }
+
+        self.parent_id = None;
+        self.entity.touch();
+        Ok(())
+    }
+
+    /// Archive this location (soft delete)
+    pub fn archive(&mut self) -> DomainResult<()> {
+        if self.archived {
+            return Err(DomainError::ValidationError(
+                "Location is already archived".to_string()
+            ));
+        }
+
+        self.archived = true;
+        self.entity.touch();
+        Ok(())
+    }
+
+    /// Check if location is archived
+    pub fn is_archived(&self) -> bool {
+        self.archived
+    }
+
+    /// Get current metadata snapshot
+    pub fn get_metadata(&self) -> &HashMap<String, String> {
+        &self.metadata
     }
 }
 

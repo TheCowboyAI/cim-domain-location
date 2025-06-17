@@ -5,13 +5,11 @@
 
 use crate::aggregate::{Location, LocationMarker};
 use cim_domain::{
-    DomainError, DomainResult, EventHandler,
+    DomainResult,
     AggregateRepository, EntityId, DomainEvent,
 };
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use std::collections::HashMap;
 
 /// Location validation requested event from Policy domain
 #[derive(Debug, Clone, Serialize, Deserialize)]
