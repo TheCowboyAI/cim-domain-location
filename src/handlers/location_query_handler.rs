@@ -187,7 +187,7 @@ impl LocationQueryHandler {
     pub fn get_hierarchy(&self, query: GetLocationHierarchyQuery) -> DomainResult<Vec<LocationHierarchy>> {
         let root_locations = if let Some(root_id) = query.root_location_id {
             vec![self.locations.get(&root_id)
-                .ok_or_else(|| DomainError::generic(format!("Location {} not found", root_id)))?
+                .ok_or_else(|| DomainError::generic(format!("Location {root_id} not found")))?
                 .clone()]
         } else {
             // Find all top-level locations (no parent)

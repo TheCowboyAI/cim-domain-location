@@ -174,7 +174,7 @@ impl<L: AggregateRepository<Location>> AuthenticationEventHandler<L> {
                 risk_indicators.push(RiskIndicator {
                     indicator_type: "vpn_detected".to_string(),
                     risk_level: RiskLevel::Medium,
-                    description: format!("{} connection detected", network_type),
+                    description: format!("{network_type} connection detected"),
                 });
             }
         }
@@ -251,7 +251,7 @@ impl<L: AggregateRepository<Location>> AuthenticationEventHandler<L> {
                     risk_indicators.push(RiskIndicator {
                         indicator_type: "geo_restriction".to_string(),
                         risk_level: restriction.risk_level.clone(),
-                        description: format!("Access from restricted country: {}", country),
+                        description: format!("Access from restricted country: {country}"),
                     });
                     return false;
                 }
@@ -344,7 +344,7 @@ impl<L: AggregateRepository<Location>> AuthenticationEventHandler<L> {
         
         // Save the location
         self.location_repository.save(&location)
-            .map_err(|e| cim_domain::DomainError::InternalError(e))?;
+            .map_err(cim_domain::DomainError::InternalError)?;
         
         Ok(location_id)
     }
@@ -354,15 +354,15 @@ impl<L: AggregateRepository<Location>> AuthenticationEventHandler<L> {
         let mut key_parts = Vec::new();
         
         if let Some(ip) = &context.ip_address {
-            key_parts.push(format!("ip:{}", ip));
+            key_parts.push(format!("ip:{ip}"));
         }
         
         if let Some((lat, lon)) = context.coordinates {
-            key_parts.push(format!("coords:{:.4},{:.4}", lat, lon));
+            key_parts.push(format!("coords:{lat:.4},{lon:.4}"));
         }
         
         if let Some(country) = &context.country {
-            key_parts.push(format!("country:{}", country));
+            key_parts.push(format!("country:{country}"));
         }
         
         key_parts.join(":")

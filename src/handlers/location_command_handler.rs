@@ -58,7 +58,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                                 command_id: envelope.id,
                                                 correlation_id: envelope.correlation_id,
                                                 status: CommandStatus::Rejected,
-                                                reason: Some(format!("Invalid coordinates: {}", e)),
+                                                reason: Some(format!("Invalid coordinates: {e}")),
                                             };
                                         }
                                     }
@@ -69,7 +69,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                         command_id: envelope.id,
                                         correlation_id: envelope.correlation_id,
                                         status: CommandStatus::Rejected,
-                                        reason: Some(format!("Failed to create location: {}", e)),
+                                        reason: Some(format!("Failed to create location: {e}")),
                                     };
                                 }
                             }
@@ -81,7 +81,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                         command_id: envelope.id,
                                         correlation_id: envelope.correlation_id,
                                         status: CommandStatus::Rejected,
-                                        reason: Some(format!("Failed to create location: {}", e)),
+                                        reason: Some(format!("Failed to create location: {e}")),
                                     };
                                 }
                             }
@@ -103,7 +103,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                         command_id: envelope.id,
                                         correlation_id: envelope.correlation_id,
                                         status: CommandStatus::Rejected,
-                                        reason: Some(format!("Failed to create virtual location: {}", e)),
+                                        reason: Some(format!("Failed to create virtual location: {e}")),
                                     };
                                 }
                             }
@@ -134,7 +134,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                         command_id: envelope.id,
                         correlation_id: envelope.correlation_id,
                         status: CommandStatus::Rejected,
-                        reason: Some(format!("Failed to save location: {}", e)),
+                        reason: Some(format!("Failed to save location: {e}")),
                     };
                 }
 
@@ -156,7 +156,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                 ) {
                     // Log the error but don't fail the command
                     // Events can be retried or handled separately
-                    eprintln!("Failed to publish LocationDefined event: {}", e);
+                    eprintln!("Failed to publish LocationDefined event: {e}");
                 }
 
                 CommandAcknowledgment {
@@ -170,7 +170,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                 command_id: envelope.id,
                 correlation_id: envelope.correlation_id,
                 status: CommandStatus::Rejected,
-                reason: Some(format!("Repository error: {}", e)),
+                reason: Some(format!("Repository error: {e}")),
             },
         }
     }
