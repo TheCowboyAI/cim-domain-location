@@ -3,13 +3,14 @@
 //! Handles authentication-related events from the Policy domain and
 //! performs location validation operations.
 
-use crate::aggregate::{Location, LocationMarker};
+use crate::aggregate::{Location, LocationMarker, GeoCoordinates, VirtualLocation};
 use cim_domain::{
     DomainResult,
     AggregateRepository, EntityId, DomainEvent,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use std::collections::HashMap;
 
 /// Location validation requested event from Policy domain
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -297,11 +298,74 @@ impl<L: AggregateRepository<Location>> AuthenticationEventHandler<L> {
     /// Find or create location aggregate
     async fn find_or_create_location(
         &self,
-        _context: &LocationContext,
+        context: &LocationContext,
     ) -> DomainResult<EntityId<LocationMarker>> {
-        // In a real implementation, would search for existing location
-        // or create a new one based on the context
-        Ok(EntityId::<LocationMarker>::new())
+        // Create a unique identifier based on location context
+        let location_key = self.generate_location_key(context);
+        
+        // Try to find existing location by key
+        // Since we don't have a search method, we'll create a new location
+        // In a real implementation, you'd have a query method to find by attributes
+        
+        let location_id = EntityId::<LocationMarker>::new();
+        let mut location = if let Some((lat, lon)) = context.coordinates {
+            // Use coordinates if available
+            Location::new_from_coordinates(
+                location_id,
+                context.country.clone().unwrap_or_else(|| "Unknown".to_string()),
+                GeoCoordinates::new(lat, lon),
+            )?
+        } else {
+            // Create a virtual location if no coordinates
+            Location::new_virtual(
+                location_id,
+                context.country.clone().unwrap_or_else(|| "Unknown".to_string()),
+                VirtualLocation {
+                    platform: "authentication_system".to_string(),
+                    platform_id: location_key.clone(),
+                    url: None,
+                    platform_data: HashMap::new(),
+                },
+            )?
+        };
+        
+        // Add metadata based on context
+        if let Some(ip) = &context.ip_address {
+            location.add_metadata("ip_address".to_string(), ip.clone());
+        }
+        
+        if let Some(network_type) = &context.network_type {
+            location.add_metadata("network_type".to_string(), network_type.clone());
+        }
+        
+        if let Some(device_id) = &context.device_id {
+            location.add_metadata("device_id".to_string(), device_id.clone());
+        }
+        
+        // Save the location
+        self.location_repository.save(&location)
+            .map_err(|e| cim_domain::DomainError::InternalError(e))?;
+        
+        Ok(location_id)
+    }
+    
+    /// Generate a unique key for location based on context
+    fn generate_location_key(&self, context: &LocationContext) -> String {
+        let mut key_parts = Vec::new();
+        
+        if let Some(ip) = &context.ip_address {
+            key_parts.push(format!("ip:{}", ip));
+        }
+        
+        if let Some((lat, lon)) = context.coordinates {
+            key_parts.push(format!("coords:{:.4},{:.4}", lat, lon));
+        }
+        
+        if let Some(country) = &context.country {
+            key_parts.push(format!("country:{}", country));
+        }
+        
+        key_parts.join(":")
     }
 }
 

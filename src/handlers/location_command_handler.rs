@@ -4,10 +4,16 @@ use crate::aggregate::{Location, LocationType, GeoCoordinates};
 use crate::{DefineLocation, LocationDefined};
 use cim_domain::{
     CommandHandler, CommandEnvelope, CommandAcknowledgment, CommandStatus,
-    AggregateRepository, EventPublisher, EntityId,
+    AggregateRepository, EntityId, CorrelationId,
 };
 use crate::LocationDomainEvent;
 use std::sync::Arc;
+
+/// Event publisher trait for location domain
+pub trait EventPublisher: Send + Sync {
+    /// Publish domain events
+    fn publish_events(&self, events: Vec<LocationDomainEvent>, correlation_id: CorrelationId) -> Result<(), String>;
+}
 
 /// Handles location-related commands
 pub struct LocationCommandHandler<R: AggregateRepository<Location>> {
@@ -133,7 +139,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                 }
 
                 // Emit event
-                let _event = LocationDomainEvent::LocationDefined(LocationDefined {
+                let event = LocationDomainEvent::LocationDefined(LocationDefined {
                     location_id: cmd.location_id,
                     name: cmd.name.clone(),
                     location_type: cmd.location_type.clone(),
@@ -143,16 +149,15 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                     parent_id: cmd.parent_id,
                 });
 
-                // For now, we'll skip event publishing since it requires DomainEventEnum
-                // TODO: Implement proper event publishing for location domain
-                // if let Err(e) = self.event_publisher.publish_events(vec![event], envelope.correlation_id.clone()) {
-                //     return CommandAcknowledgment {
-                //         command_id: envelope.id,
-                //         correlation_id: envelope.correlation_id,
-                //         status: CommandStatus::Rejected,
-                //         reason: Some(format!("Failed to publish event: {}", e)),
-                //     };
-                // }
+                // Publish the event
+                if let Err(e) = self.event_publisher.publish_events(
+                    vec![event], 
+                    envelope.correlation_id.clone()
+                ) {
+                    // Log the error but don't fail the command
+                    // Events can be retried or handled separately
+                    eprintln!("Failed to publish LocationDefined event: {}", e);
+                }
 
                 CommandAcknowledgment {
                     command_id: envelope.id,
