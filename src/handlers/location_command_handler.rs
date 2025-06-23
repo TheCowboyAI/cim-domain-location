@@ -40,7 +40,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
         match self.repository.load(location_id) {
             Ok(Some(_)) => CommandAcknowledgment {
                 command_id: envelope.id,
-                correlation_id: envelope.correlation_id,
+                correlation_id: envelope.identity.correlation_id.clone(),
                 status: CommandStatus::Rejected,
                 reason: Some("Location already exists".to_string()),
             },
@@ -56,7 +56,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                         if let Err(e) = loc.set_coordinates(coords.clone()) {
                                             return CommandAcknowledgment {
                                                 command_id: envelope.id,
-                                                correlation_id: envelope.correlation_id,
+                                                correlation_id: envelope.identity.correlation_id.clone(),
                                                 status: CommandStatus::Rejected,
                                                 reason: Some(format!("Invalid coordinates: {e}")),
                                             };
@@ -67,7 +67,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                 Err(e) => {
                                     return CommandAcknowledgment {
                                         command_id: envelope.id,
-                                        correlation_id: envelope.correlation_id,
+                                        correlation_id: envelope.identity.correlation_id.clone(),
                                         status: CommandStatus::Rejected,
                                         reason: Some(format!("Failed to create location: {e}")),
                                     };
@@ -79,7 +79,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                 Err(e) => {
                                     return CommandAcknowledgment {
                                         command_id: envelope.id,
-                                        correlation_id: envelope.correlation_id,
+                                        correlation_id: envelope.identity.correlation_id.clone(),
                                         status: CommandStatus::Rejected,
                                         reason: Some(format!("Failed to create location: {e}")),
                                     };
@@ -88,7 +88,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                         } else {
                             return CommandAcknowledgment {
                                 command_id: envelope.id,
-                                correlation_id: envelope.correlation_id,
+                                correlation_id: envelope.identity.correlation_id.clone(),
                                 status: CommandStatus::Rejected,
                                 reason: Some("Physical location requires either address or coordinates".to_string()),
                             };
@@ -101,7 +101,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                 Err(e) => {
                                     return CommandAcknowledgment {
                                         command_id: envelope.id,
-                                        correlation_id: envelope.correlation_id,
+                                        correlation_id: envelope.identity.correlation_id.clone(),
                                         status: CommandStatus::Rejected,
                                         reason: Some(format!("Failed to create virtual location: {e}")),
                                     };
@@ -110,7 +110,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                         } else {
                             return CommandAcknowledgment {
                                 command_id: envelope.id,
-                                correlation_id: envelope.correlation_id,
+                                correlation_id: envelope.identity.correlation_id.clone(),
                                 status: CommandStatus::Rejected,
                                 reason: Some("Virtual location requires virtual location details".to_string()),
                             };
@@ -132,7 +132,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                 if let Err(e) = self.repository.save(&location) {
                     return CommandAcknowledgment {
                         command_id: envelope.id,
-                        correlation_id: envelope.correlation_id,
+                        correlation_id: envelope.identity.correlation_id.clone(),
                         status: CommandStatus::Rejected,
                         reason: Some(format!("Failed to save location: {e}")),
                     };
@@ -152,7 +152,7 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                 // Publish the event
                 if let Err(e) = self.event_publisher.publish_events(
                     vec![event], 
-                    envelope.correlation_id.clone()
+                    envelope.identity.correlation_id.clone()
                 ) {
                     // Log the error but don't fail the command
                     // Events can be retried or handled separately
@@ -161,14 +161,14 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
 
                 CommandAcknowledgment {
                     command_id: envelope.id,
-                    correlation_id: envelope.correlation_id,
+                    correlation_id: envelope.identity.correlation_id.clone(),
                     status: CommandStatus::Accepted,
                     reason: None,
                 }
             }
             Err(e) => CommandAcknowledgment {
                 command_id: envelope.id,
-                correlation_id: envelope.correlation_id,
+                correlation_id: envelope.identity.correlation_id.clone(),
                 status: CommandStatus::Rejected,
                 reason: Some(format!("Repository error: {e}")),
             },
