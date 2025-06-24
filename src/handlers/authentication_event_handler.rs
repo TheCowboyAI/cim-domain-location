@@ -3,7 +3,8 @@
 //! Handles authentication-related events from the Policy domain and
 //! performs location validation operations.
 
-use crate::aggregate::{Location, LocationMarker, GeoCoordinates, VirtualLocation};
+use crate::aggregate::{Location, LocationMarker};
+use crate::value_objects::{GeoCoordinates, VirtualLocation};
 use cim_domain::{
     DomainResult,
     AggregateRepository, EntityId, DomainEvent,
@@ -320,12 +321,10 @@ impl<L: AggregateRepository<Location>> AuthenticationEventHandler<L> {
             Location::new_virtual(
                 location_id,
                 context.country.clone().unwrap_or_else(|| "Unknown".to_string()),
-                VirtualLocation {
-                    platform: "authentication_system".to_string(),
-                    platform_id: location_key.clone(),
-                    url: None,
-                    platform_data: HashMap::new(),
-                },
+                VirtualLocation::api_endpoint(
+                    &format!("https://auth.system/location/{}", location_key),
+                    location_key.clone(),
+                ).unwrap(),
             )?
         };
         

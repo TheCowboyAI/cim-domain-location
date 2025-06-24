@@ -1,6 +1,7 @@
 //! Location query handlers and projections for CQRS read side
 
-use crate::aggregate::{Location, LocationType, Address, GeoCoordinates, VirtualLocation};
+use crate::aggregate::Location;
+use crate::value_objects::{LocationType, Address, GeoCoordinates, VirtualLocation};
 use cim_domain::{DomainError, DomainResult, AggregateRoot};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

@@ -1,6 +1,7 @@
 //! Location commands
 
-use crate::aggregate::{LocationType, Address, GeoCoordinates, VirtualLocation, LocationMarker};
+use crate::aggregate::LocationMarker;
+use crate::value_objects::{LocationType, Address, GeoCoordinates, VirtualLocation};
 use cim_domain::{Command, EntityId};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

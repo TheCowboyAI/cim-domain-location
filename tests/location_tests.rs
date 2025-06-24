@@ -1,8 +1,8 @@
 //! Comprehensive tests for the Location domain
 
 use cim_domain_location::{
-    Location, Address, GeoCoordinates, VirtualLocation,
-    aggregate::{LocationType, LocationMarker},
+    Location, LocationMarker, LocationType,
+    Address, GeoCoordinates, VirtualLocation,
     DefineLocation, UpdateLocation, SetParentLocation, RemoveParentLocation,
     AddLocationMetadata, ArchiveLocation,
     LocationDefined, LocationUpdated, ParentLocationSet, ParentLocationRemoved,
@@ -62,12 +62,10 @@ fn test_l1_define_physical_location() {
 fn test_l2_define_virtual_location() {
     let location_id = Uuid::new_v4();
 
-    let virtual_location = VirtualLocation {
-        platform: "Zoom".to_string(),
-        platform_id: "123-456-789".to_string(),
-        url: Some("https://zoom.us/j/123456789".to_string()),
-        platform_data: HashMap::new(),
-    };
+    let virtual_location = VirtualLocation::website(
+        "https://zoom.us/j/123456789",
+        "Daily Standup".to_string()
+    ).unwrap();
 
     let location = Location::new_virtual(
         EntityId::from_uuid(location_id),
@@ -394,12 +392,10 @@ async fn test_l9_location_statistics() {
     let virtual_location = Location::new_virtual(
         EntityId::from_uuid(virtual_id),
         "Virtual Meeting Room".to_string(),
-        VirtualLocation {
-            platform: "Zoom".to_string(),
-            platform_id: "123".to_string(),
-            url: None,
-            platform_data: HashMap::new(),
-        },
+        VirtualLocation::website(
+            "https://zoom.us/j/123",
+            "Virtual Meeting Room".to_string()
+        ).unwrap(),
     ).unwrap();
 
     // Create archived location

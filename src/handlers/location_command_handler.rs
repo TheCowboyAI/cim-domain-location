@@ -1,6 +1,7 @@
 //! Location command handler
 
-use crate::aggregate::{Location, LocationType, GeoCoordinates};
+use crate::aggregate::Location;
+use crate::value_objects::{LocationType, GeoCoordinates};
 use crate::{DefineLocation, LocationDefined};
 use cim_domain::{
     CommandHandler, CommandEnvelope, CommandAcknowledgment, CommandStatus,

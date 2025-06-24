@@ -36,6 +36,9 @@ chrono = { version = "0.4", features = ["serde"] }
 # Collections
 indexmap = "2.7"
 
+# URL parsing
+url = "2.5"
+
 [dev-dependencies]
 tokio-test = "0.4"
 proptest = "1.6"

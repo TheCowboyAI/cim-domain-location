@@ -9,6 +9,6 @@ pub use location_command_handler::*;
 pub use location_query_handler::*;
 
 // Re-export common types for convenience
-pub use crate::aggregate::{LocationType, Address, GeoCoordinates, VirtualLocation};
+pub use crate::value_objects::{LocationType, Address, GeoCoordinates, VirtualLocation};
 pub use crate::commands::*;
 pub use crate::events::*;

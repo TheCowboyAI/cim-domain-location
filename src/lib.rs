@@ -19,6 +19,7 @@ pub use commands::*;
 pub use events::*;
 pub use handlers::*;
 pub use domain_events::*;
+pub use value_objects::*;
 
 // Re-export core domain types that are commonly used
 pub use cim_domain::{

@@ -6,6 +6,11 @@
 use cim_domain::{AggregateRoot, Entity, EntityId, DomainError, DomainResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use crate::value_objects::{
+    LocationType, Address, GeoCoordinates, 
+    VirtualLocation as EnhancedVirtualLocation,
+    VirtualUrl, VirtualLocationType, UrlType
+};
 
 /// Location aggregate - represents any identifiable place
 #[derive(Debug, Clone)]
@@ -29,7 +34,7 @@ pub struct Location {
     pub coordinates: Option<GeoCoordinates>,
 
     /// Virtual location details if applicable
-    pub virtual_location: Option<VirtualLocation>,
+    pub virtual_location: Option<EnhancedVirtualLocation>,
 
     /// Parent location for hierarchical structures
     pub parent_id: Option<EntityId<LocationMarker>>,
@@ -44,73 +49,6 @@ pub struct Location {
 /// Marker type for Location entities
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LocationMarker;
-
-/// Types of locations
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum LocationType {
-    /// Physical location with real-world presence
-    Physical,
-    /// Virtual location (e.g., online meeting room, game world)
-    Virtual,
-    /// Logical location (e.g., department, zone)
-    Logical,
-    /// Hybrid location with both physical and virtual aspects
-    Hybrid,
-}
-
-/// Physical address value object
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Address {
-    /// Street address (line 1)
-    pub street1: String,
-
-    /// Street address (line 2) - optional
-    pub street2: Option<String>,
-
-    /// City/locality
-    pub locality: String,
-
-    /// State/province/region
-    pub region: String,
-
-    /// Country
-    pub country: String,
-
-    /// Postal/ZIP code
-    pub postal_code: String,
-}
-
-/// Geographic coordinates value object
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct GeoCoordinates {
-    /// Latitude in decimal degrees (-90 to 90)
-    pub latitude: f64,
-
-    /// Longitude in decimal degrees (-180 to 180)
-    pub longitude: f64,
-
-    /// Altitude in meters (optional)
-    pub altitude: Option<f64>,
-
-    /// Coordinate system (default: WGS84)
-    pub coordinate_system: String,
-}
-
-/// Virtual location details
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct VirtualLocation {
-    /// Platform or system hosting the virtual location
-    pub platform: String,
-
-    /// Identifier within the platform
-    pub platform_id: String,
-
-    /// Access URL if applicable
-    pub url: Option<String>,
-
-    /// Additional platform-specific data
-    pub platform_data: HashMap<String, String>,
-}
 
 impl Location {
     /// Create a new physical location with an address
@@ -139,7 +77,7 @@ impl Location {
     pub fn new_virtual(
         id: EntityId<LocationMarker>,
         name: String,
-        virtual_location: VirtualLocation,
+        virtual_location: EnhancedVirtualLocation,
     ) -> DomainResult<Self> {
         Ok(Self {
             entity: Entity::with_id(id),
@@ -233,7 +171,7 @@ impl Location {
         name: Option<String>,
         address: Option<Address>,
         coordinates: Option<GeoCoordinates>,
-        virtual_location: Option<VirtualLocation>,
+        virtual_location: Option<EnhancedVirtualLocation>,
     ) -> DomainResult<()> {
         if self.archived {
             return Err(DomainError::ValidationError(
@@ -334,147 +272,20 @@ impl AggregateRoot for Location {
     }
 }
 
-impl Address {
-    /// Create a new address
-    pub fn new(
-        street1: String,
-        locality: String,
-        region: String,
-        country: String,
-        postal_code: String,
-    ) -> Self {
-        Self {
-            street1,
-            street2: None,
-            locality,
-            region,
-            country,
-            postal_code,
-        }
-    }
 
-    /// Add second street line
-    pub fn with_street2(mut self, street2: String) -> Self {
-        self.street2 = Some(street2);
-        self
-    }
-
-    /// Validate address invariants
-    pub fn validate(&self) -> DomainResult<()> {
-        if self.street1.trim().is_empty() {
-            return Err(DomainError::ValidationError(
-                "Street address cannot be empty".to_string()
-            ));
-        }
-
-        if self.locality.trim().is_empty() {
-            return Err(DomainError::ValidationError(
-                "Locality cannot be empty".to_string()
-            ));
-        }
-
-        if self.region.trim().is_empty() {
-            return Err(DomainError::ValidationError(
-                "Region cannot be empty".to_string()
-            ));
-        }
-
-        if self.country.trim().is_empty() {
-            return Err(DomainError::ValidationError(
-                "Country cannot be empty".to_string()
-            ));
-        }
-
-        if self.postal_code.trim().is_empty() {
-            return Err(DomainError::ValidationError(
-                "Postal code cannot be empty".to_string()
-            ));
-        }
-
-        // Additional validation could include:
-        // - Country-specific postal code formats
-        // - Valid country codes
-        // - Region validation based on country
-
-        Ok(())
-    }
-
-    /// Format as single-line string
-    pub fn format_single_line(&self) -> String {
-        let mut parts = vec![self.street1.clone()];
-
-        if let Some(street2) = &self.street2 {
-            parts.push(street2.clone());
-        }
-
-        parts.push(format!("{}, {} {}", self.locality, self.region, self.postal_code));
-        parts.push(self.country.clone());
-
-        parts.join(", ")
-    }
-}
-
-impl GeoCoordinates {
-    /// Create new coordinates (defaults to WGS84)
-    pub fn new(latitude: f64, longitude: f64) -> Self {
-        Self {
-            latitude,
-            longitude,
-            altitude: None,
-            coordinate_system: "WGS84".to_string(),
-        }
-    }
-
-    /// Add altitude
-    pub fn with_altitude(mut self, altitude: f64) -> Self {
-        self.altitude = Some(altitude);
-        self
-    }
-
-    /// Use different coordinate system
-    pub fn with_coordinate_system(mut self, system: String) -> Self {
-        self.coordinate_system = system;
-        self
-    }
-
-    /// Validate coordinate ranges
-    pub fn validate(&self) -> DomainResult<()> {
-        if self.latitude < -90.0 || self.latitude > 90.0 {
-            return Err(DomainError::ValidationError(
-                format!("Latitude {} is out of range [-90, 90]", self.latitude)
-            ));
-        }
-
-        if self.longitude < -180.0 || self.longitude > 180.0 {
-            return Err(DomainError::ValidationError(
-                format!("Longitude {} is out of range [-180, 180]", self.longitude)
-            ));
-        }
-
-        Ok(())
-    }
-
-    /// Calculate distance to another point (in meters, using Haversine formula)
-    pub fn distance_to(&self, other: &GeoCoordinates) -> f64 {
-        const EARTH_RADIUS_M: f64 = 6_371_000.0;
-
-        let lat1 = self.latitude.to_radians();
-        let lat2 = other.latitude.to_radians();
-        let delta_lat = (other.latitude - self.latitude).to_radians();
-        let delta_lon = (other.longitude - self.longitude).to_radians();
-
-        let a = (delta_lat / 2.0).sin().powi(2)
-            + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
-        let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
-
-        EARTH_RADIUS_M * c
-    }
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    /// Test address validation
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Create Address] --> B{Validate}
+    ///     B -->|Valid| C[Success]
+    ///     B -->|Empty Fields| D[Error]
+    /// ```
     #[test]
     fn test_address_validation() {
         // Valid address
@@ -496,23 +307,143 @@ mod tests {
             "62701".to_string(),
         );
         assert!(invalid_address.validate().is_err());
+
+        // Invalid address - empty locality
+        let invalid_locality = Address::new(
+            "123 Main St".to_string(),
+            "".to_string(),
+            "IL".to_string(),
+            "USA".to_string(),
+            "62701".to_string(),
+        );
+        assert!(invalid_locality.validate().is_err());
+
+        // Invalid address - empty region
+        let invalid_region = Address::new(
+            "123 Main St".to_string(),
+            "Springfield".to_string(),
+            "".to_string(),
+            "USA".to_string(),
+            "62701".to_string(),
+        );
+        assert!(invalid_region.validate().is_err());
+
+        // Invalid address - empty country
+        let invalid_country = Address::new(
+            "123 Main St".to_string(),
+            "Springfield".to_string(),
+            "IL".to_string(),
+            "".to_string(),
+            "62701".to_string(),
+        );
+        assert!(invalid_country.validate().is_err());
+
+        // Invalid address - empty postal code
+        let invalid_postal = Address::new(
+            "123 Main St".to_string(),
+            "Springfield".to_string(),
+            "IL".to_string(),
+            "USA".to_string(),
+            "".to_string(),
+        );
+        assert!(invalid_postal.validate().is_err());
     }
 
+    /// Test address with street2
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Base Address] --> B[Add Street2]
+    ///     B --> C[Format Output]
+    ///     C --> D[Verify Format]
+    /// ```
+    #[test]
+    fn test_address_with_street2() {
+        let address = Address::new(
+            "123 Main St".to_string(),
+            "Springfield".to_string(),
+            "IL".to_string(),
+            "USA".to_string(),
+            "62701".to_string(),
+        ).with_street2("Apt 4B".to_string());
+
+        assert_eq!(address.street2, Some("Apt 4B".to_string()));
+
+        let formatted = address.format_single_line();
+        assert!(formatted.contains("123 Main St"));
+        assert!(formatted.contains("Apt 4B"));
+        assert!(formatted.contains("Springfield, IL 62701"));
+        assert!(formatted.contains("USA"));
+    }
+
+    /// Test geo coordinates validation
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Create Coords] --> B{Validate Range}
+    ///     B -->|Valid| C[Success]
+    ///     B -->|Out of Range| D[Error]
+    /// ```
     #[test]
     fn test_geo_coordinates_validation() {
         // Valid coordinates
         let valid_coords = GeoCoordinates::new(40.7128, -74.0060);
         assert!(valid_coords.validate().is_ok());
 
+        // Edge cases - maximum valid values
+        let max_lat = GeoCoordinates::new(90.0, 0.0);
+        assert!(max_lat.validate().is_ok());
+
+        let min_lat = GeoCoordinates::new(-90.0, 0.0);
+        assert!(min_lat.validate().is_ok());
+
+        let max_lon = GeoCoordinates::new(0.0, 180.0);
+        assert!(max_lon.validate().is_ok());
+
+        let min_lon = GeoCoordinates::new(0.0, -180.0);
+        assert!(min_lon.validate().is_ok());
+
         // Invalid latitude
         let invalid_lat = GeoCoordinates::new(91.0, -74.0060);
         assert!(invalid_lat.validate().is_err());
 
+        let invalid_lat_neg = GeoCoordinates::new(-91.0, -74.0060);
+        assert!(invalid_lat_neg.validate().is_err());
+
         // Invalid longitude
         let invalid_lon = GeoCoordinates::new(40.7128, -181.0);
         assert!(invalid_lon.validate().is_err());
+
+        let invalid_lon_pos = GeoCoordinates::new(40.7128, 181.0);
+        assert!(invalid_lon_pos.validate().is_err());
     }
 
+    /// Test coordinates with altitude
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Base Coords] --> B[Add Altitude]
+    ///     B --> C[Add Coord System]
+    ///     C --> D[Verify Fields]
+    /// ```
+    #[test]
+    fn test_coordinates_with_altitude() {
+        let coords = GeoCoordinates::new(40.7128, -74.0060)
+            .with_altitude(100.5)
+            .with_coordinate_system("NAD83".to_string());
+
+        assert_eq!(coords.altitude, Some(100.5));
+        assert_eq!(coords.coordinate_system, "NAD83");
+    }
+
+    /// Test physical location creation
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Create Physical] --> B[Validate Address]
+    ///     B --> C[Set Fields]
+    ///     C --> D[Verify State]
+    /// ```
     #[test]
     fn test_location_creation() {
         let location_id = EntityId::<LocationMarker>::new();
@@ -528,14 +459,263 @@ mod tests {
         let location = Location::new_physical(
             location_id,
             "Apple Park".to_string(),
-            address,
+            address.clone(),
         ).unwrap();
 
         assert_eq!(location.name, "Apple Park");
         assert_eq!(location.location_type, LocationType::Physical);
-        assert!(location.address.is_some());
+        assert_eq!(location.address, Some(address));
+        assert!(location.coordinates.is_none());
+        assert!(location.virtual_location.is_none());
+        assert!(!location.archived);
+        assert_eq!(location.version, 0);
     }
 
+    /// Test virtual location creation
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Create Virtual] --> B[Set Platform]
+    ///     B --> C[Add URL]
+    ///     C --> D[Verify Type]
+    /// ```
+    #[test]
+    fn test_virtual_location_creation() {
+        let location_id = EntityId::<LocationMarker>::new();
+
+        let virtual_loc = EnhancedVirtualLocation {
+            location_type: VirtualLocationType::MeetingRoom { platform: "Zoom".to_string() },
+            primary_identifier: "meeting-123".to_string(),
+            urls: vec![VirtualUrl::new("https://zoom.us/j/123".to_string(), UrlType::Primary).unwrap()],
+            ip_addresses: Vec::new(),
+            network_info: None,
+            metadata: HashMap::from([
+                ("passcode".to_string(), "abc123".to_string()),
+            ]),
+        };
+
+        let location = Location::new_virtual(
+            location_id,
+            "Team Standup Room".to_string(),
+            virtual_loc.clone(),
+        ).unwrap();
+
+        assert_eq!(location.name, "Team Standup Room");
+        assert_eq!(location.location_type, LocationType::Virtual);
+        assert!(location.address.is_none());
+        assert!(location.coordinates.is_none());
+        assert_eq!(location.virtual_location, Some(virtual_loc));
+    }
+
+    /// Test location from coordinates
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Create from Coords] --> B[Validate Coords]
+    ///     B --> C[Set Type Physical]
+    ///     C --> D[No Address]
+    /// ```
+    #[test]
+    fn test_location_from_coordinates() {
+        let location_id = EntityId::<LocationMarker>::new();
+        let coords = GeoCoordinates::new(37.7749, -122.4194);
+
+        let location = Location::new_from_coordinates(
+            location_id,
+            "Golden Gate Bridge".to_string(),
+            coords.clone(),
+        ).unwrap();
+
+        assert_eq!(location.name, "Golden Gate Bridge");
+        assert_eq!(location.location_type, LocationType::Physical);
+        assert!(location.address.is_none());
+        assert_eq!(location.coordinates, Some(coords));
+    }
+
+    /// Test location updates
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Create Location] --> B[Update Details]
+    ///     B --> C[Verify Changes]
+    ///     C --> D[Check Version]
+    /// ```
+    #[test]
+    fn test_location_updates() {
+        let location_id = EntityId::<LocationMarker>::new();
+        let mut location = Location::new_from_coordinates(
+            location_id,
+            "Test Location".to_string(),
+            GeoCoordinates::new(0.0, 0.0),
+        ).unwrap();
+
+        // Update name
+        location.update_details(
+            Some("Updated Location".to_string()),
+            None,
+            None,
+            None,
+        ).unwrap();
+
+        assert_eq!(location.name, "Updated Location");
+
+        // Add address
+        let address = Address::new(
+            "456 Oak Ave".to_string(),
+            "Oakland".to_string(),
+            "CA".to_string(),
+            "USA".to_string(),
+            "94612".to_string(),
+        );
+
+        location.update_details(
+            None,
+            Some(address.clone()),
+            None,
+            None,
+        ).unwrap();
+
+        assert_eq!(location.address, Some(address));
+    }
+
+    /// Test parent-child relationships
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Parent Location] --> B[Child Location]
+    ///     B --> C[Set Parent]
+    ///     C --> D{Self-Reference?}
+    ///     D -->|No| E[Success]
+    ///     D -->|Yes| F[Error]
+    /// ```
+    #[test]
+    fn test_location_hierarchy() {
+        let parent_id = EntityId::<LocationMarker>::new();
+        let child_id = EntityId::<LocationMarker>::new();
+
+        let mut child_location = Location::new_physical(
+            child_id,
+            "Conference Room A".to_string(),
+            Address::new(
+                "123 Main St".to_string(),
+                "City".to_string(),
+                "State".to_string(),
+                "Country".to_string(),
+                "12345".to_string(),
+            ),
+        ).unwrap();
+
+        // Set parent
+        child_location.set_parent(parent_id).unwrap();
+        assert_eq!(child_location.parent_id, Some(parent_id));
+
+        // Remove parent
+        child_location.remove_parent().unwrap();
+        assert_eq!(child_location.parent_id, None);
+
+        // Try self-reference
+        let result = child_location.set_parent(child_id);
+        assert!(result.is_err());
+    }
+
+    /// Test metadata operations
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Create Location] --> B[Add Metadata]
+    ///     B --> C[Add Bulk]
+    ///     C --> D[Verify All]
+    /// ```
+    #[test]
+    fn test_metadata_operations() {
+        let location_id = EntityId::<LocationMarker>::new();
+        let mut location = Location::new_physical(
+            location_id,
+            "Office".to_string(),
+            Address::new(
+                "789 Tech Blvd".to_string(),
+                "Tech City".to_string(),
+                "TC".to_string(),
+                "Techland".to_string(),
+                "00000".to_string(),
+            ),
+        ).unwrap();
+
+        // Add single metadata
+        location.add_metadata("capacity".to_string(), "50".to_string());
+        assert_eq!(location.metadata.get("capacity"), Some(&"50".to_string()));
+
+        // Add bulk metadata
+        let bulk_metadata = HashMap::from([
+            ("wifi".to_string(), "available".to_string()),
+            ("parking".to_string(), "free".to_string()),
+            ("accessibility".to_string(), "wheelchair".to_string()),
+        ]);
+
+        location.add_metadata_bulk(bulk_metadata);
+
+        assert_eq!(location.metadata.len(), 4);
+        assert_eq!(location.metadata.get("wifi"), Some(&"available".to_string()));
+        assert_eq!(location.metadata.get("parking"), Some(&"free".to_string()));
+        assert_eq!(location.metadata.get("accessibility"), Some(&"wheelchair".to_string()));
+    }
+
+    /// Test location archival
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Active Location] --> B[Archive]
+    ///     B --> C{Already Archived?}
+    ///     C -->|No| D[Success]
+    ///     C -->|Yes| E[Error]
+    ///     D --> F[Cannot Update]
+    /// ```
+    #[test]
+    fn test_location_archival() {
+        let location_id = EntityId::<LocationMarker>::new();
+        let mut location = Location::new_physical(
+            location_id,
+            "Old Office".to_string(),
+            Address::new(
+                "999 Legacy Lane".to_string(),
+                "History Town".to_string(),
+                "HT".to_string(),
+                "Pastland".to_string(),
+                "99999".to_string(),
+            ),
+        ).unwrap();
+
+        // Archive location
+        assert!(!location.is_archived());
+        location.archive().unwrap();
+        assert!(location.is_archived());
+
+        // Try to archive again
+        let result = location.archive();
+        assert!(result.is_err());
+
+        // Try to update archived location
+        let result = location.update_details(
+            Some("New Name".to_string()),
+            None,
+            None,
+            None,
+        );
+        assert!(result.is_err());
+
+        // Try to remove parent on archived location
+        let result = location.remove_parent();
+        assert!(result.is_err());
+    }
+
+    /// Test distance calculation
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[NYC Coords] --> B[LA Coords]
+    ///     B --> C[Calculate Distance]
+    ///     C --> D[Verify ~3944km]
+    /// ```
     #[test]
     fn test_distance_calculation() {
         // New York City
@@ -548,5 +728,90 @@ mod tests {
 
         // Should be approximately 3,944 km
         assert!((distance - 3_944_000.0).abs() < 10_000.0);
+
+        // Test same location
+        let same_distance = nyc.distance_to(&nyc);
+        assert!(same_distance < 1.0); // Should be ~0
+    }
+
+    /// Test virtual location constraints
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Virtual Location] --> B{Set Address?}
+    ///     B --> C[Error]
+    ///     A --> D{Set Coords?}
+    ///     D --> E[Error]
+    /// ```
+    #[test]
+    fn test_virtual_location_constraints() {
+        let location_id = EntityId::<LocationMarker>::new();
+        let mut location = Location::new_virtual(
+            location_id,
+            "Virtual Meeting".to_string(),
+            EnhancedVirtualLocation {
+                location_type: VirtualLocationType::MeetingRoom { platform: "Teams".to_string() },
+                primary_identifier: "meeting-456".to_string(),
+                urls: Vec::new(),
+                ip_addresses: Vec::new(),
+                network_info: None,
+                metadata: HashMap::new(),
+            },
+        ).unwrap();
+
+        // Cannot set address on virtual location
+        let address = Address::new(
+            "123 Main St".to_string(),
+            "City".to_string(),
+            "State".to_string(),
+            "Country".to_string(),
+            "12345".to_string(),
+        );
+        let result = location.set_address(address);
+        assert!(result.is_err());
+
+        // Cannot set coordinates on virtual location
+        let coords = GeoCoordinates::new(0.0, 0.0);
+        let result = location.set_coordinates(coords);
+        assert!(result.is_err());
+    }
+
+    /// Test aggregate root implementation
+    ///
+    /// ```mermaid
+    /// graph TD
+    ///     A[Create Location] --> B[Check ID]
+    ///     B --> C[Check Version]
+    ///     C --> D[Increment Version]
+    ///     D --> E[Verify Change]
+    /// ```
+    #[test]
+    fn test_aggregate_root_implementation() {
+        let location_id = EntityId::<LocationMarker>::new();
+        let mut location = Location::new_physical(
+            location_id,
+            "Test".to_string(),
+            Address::new(
+                "1 Test St".to_string(),
+                "Test City".to_string(),
+                "TS".to_string(),
+                "Testland".to_string(),
+                "00000".to_string(),
+            ),
+        ).unwrap();
+
+        // Check ID
+        assert_eq!(location.id(), location_id);
+
+        // Check initial version
+        assert_eq!(location.version(), 0);
+
+        // Increment version
+        location.increment_version();
+        assert_eq!(location.version(), 1);
+
+        // Another increment
+        location.increment_version();
+        assert_eq!(location.version(), 2);
     }
 }
