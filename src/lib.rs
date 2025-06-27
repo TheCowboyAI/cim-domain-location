@@ -8,21 +8,25 @@
 
 pub mod aggregate;
 pub mod commands;
+pub mod domain_events;
 pub mod events;
 pub mod handlers;
+pub mod projections;
+pub mod queries;
 pub mod value_objects;
-pub mod domain_events;
 
 // Re-export main types
 pub use aggregate::*;
 pub use commands::*;
+pub use domain_events::*;
 pub use events::*;
 pub use handlers::*;
-pub use domain_events::*;
+pub use projections::*;
+pub use queries::*;
 pub use value_objects::*;
 
 // Re-export core domain types that are commonly used
 pub use cim_domain::{
-    DomainError, DomainEvent, Command, CommandEnvelope,
-    AggregateRepository, EventPublisher, CommandHandler, CommandAcknowledgment,
+    AggregateRepository, Command, CommandAcknowledgment, CommandEnvelope, CommandHandler,
+    DomainError, DomainEvent, EventPublisher,
 };
