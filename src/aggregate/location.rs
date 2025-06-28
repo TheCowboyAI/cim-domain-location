@@ -4,12 +4,10 @@
 //! various means: addresses, geo-coordinates, virtual locations, etc.
 
 use cim_domain::{AggregateRoot, Entity, EntityId, DomainError, DomainResult};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use crate::value_objects::{
     LocationType, Address, GeoCoordinates, 
-    VirtualLocation as EnhancedVirtualLocation,
-    VirtualUrl, VirtualLocationType, UrlType
+    VirtualLocation as EnhancedVirtualLocation
 };
 
 /// Location aggregate - represents any identifiable place
@@ -277,6 +275,7 @@ impl AggregateRoot for Location {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::value_objects::{VirtualLocation as EnhancedVirtualLocation, VirtualLocationType, VirtualUrl, UrlType};
 
     /// Test address validation
     ///

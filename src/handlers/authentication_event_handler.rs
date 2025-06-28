@@ -11,7 +11,6 @@ use cim_domain::{
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use std::collections::HashMap;
 
 /// Location validation requested event from Policy domain
 #[derive(Debug, Clone, Serialize, Deserialize)]

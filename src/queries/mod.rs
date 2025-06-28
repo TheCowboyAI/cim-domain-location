@@ -1,16 +1,8 @@
 //! Location Domain Queries
 
-use crate::value_objects::{Coordinates, LocationId, LocationType};
+use crate::value_objects::{GeoCoordinates, LocationType};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
-pub mod find_nearby;
-pub mod get_hierarchy;
-pub mod get_location;
-
-pub use find_nearby::*;
-pub use get_hierarchy::*;
-pub use get_location::*;
 
 /// Base trait for location queries
 pub trait LocationQuery: Send + Sync {
@@ -22,7 +14,7 @@ pub trait LocationQuery: Send + Sync {
 /// Query to get a specific location
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetLocation {
-    pub location_id: LocationId,
+    pub location_id: Uuid,
     pub include_children: bool,
     pub include_ancestors: bool,
 }
@@ -30,7 +22,7 @@ pub struct GetLocation {
 /// Query to find locations within a radius
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FindNearbyLocations {
-    pub center: Coordinates,
+    pub center: GeoCoordinates,
     pub radius_km: f64,
     pub location_types: Option<Vec<LocationType>>,
 }
@@ -38,7 +30,7 @@ pub struct FindNearbyLocations {
 /// Query to get location hierarchy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetLocationHierarchy {
-    pub root_location_id: LocationId,
+    pub root_location_id: Uuid,
     pub max_depth: Option<u32>,
 }
 
