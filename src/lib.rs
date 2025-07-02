@@ -18,11 +18,18 @@ pub mod value_objects;
 // Re-export main types
 pub use aggregate::*;
 pub use commands::*;
-pub use domain_events::*;
+// Export only the enum from domain_events to avoid conflicts
+pub use domain_events::LocationDomainEvent;
+// Export all event types from events module
 pub use events::*;
-pub use handlers::*;
+// Export command handler from handlers
+pub use handlers::LocationCommandHandler;
+// Export projections
 pub use projections::*;
-pub use queries::*;
+// Export queries
+pub use queries::{GetLocation, GetLocationHierarchy, FindNearbyLocations};
+// Export query handler separately to avoid conflicts
+pub use queries::LocationQueryHandler as QueryHandler;
 pub use value_objects::*;
 
 // Re-export core domain types that are commonly used
