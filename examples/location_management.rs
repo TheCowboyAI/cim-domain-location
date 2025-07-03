@@ -8,14 +8,14 @@
 
 use cim_domain_location::{
     aggregate::Location,
-    commands::{CreateLocation, UpdateCoordinates, SetParentLocation, AddLocationAttribute},
-    events::{LocationCreated, CoordinatesUpdated, ParentLocationSet, AttributeAdded},
-    value_objects::{LocationId, LocationType, Coordinates, Address, VirtualLocation},
+    commands::{AddLocationAttribute, CreateLocation, SetParentLocation, UpdateCoordinates},
+    events::{AttributeAdded, CoordinatesUpdated, LocationCreated, ParentLocationSet},
     handlers::LocationCommandHandler,
-    queries::{GetLocation, FindNearbyLocations, LocationQueryHandler},
+    queries::{FindNearbyLocations, GetLocation, LocationQueryHandler},
+    value_objects::{Address, Coordinates, LocationId, LocationType, VirtualLocation},
 };
-use uuid::Uuid;
 use std::collections::HashMap;
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Building location created! Events: {:?}\n", events.len());
 
     // Additional implementation details...
-    
+
     println!("\n=== Example completed successfully! ===");
     Ok(())
 }

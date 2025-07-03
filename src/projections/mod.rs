@@ -2,9 +2,9 @@
 
 use crate::events::*;
 use crate::value_objects::{GeoCoordinates, LocationType};
-use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 /// Base trait for location projections
 pub trait LocationProjection: Send + Sync {
@@ -106,7 +106,11 @@ impl LocationProjection for LocationReadModel {
         }
 
         self.hierarchy.child_parent_map.remove(&event.location_id);
-        if let Some(children) = self.hierarchy.parent_child_map.get_mut(&event.previous_parent_id) {
+        if let Some(children) = self
+            .hierarchy
+            .parent_child_map
+            .get_mut(&event.previous_parent_id)
+        {
             children.retain(|id| *id != event.location_id);
         }
     }

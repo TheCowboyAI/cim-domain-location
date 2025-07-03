@@ -1,16 +1,13 @@
 //! Comprehensive tests for the Location domain
 
+use cim_domain::{CommandEnvelope, CommandHandler, EntityId};
 use cim_domain_location::{
-    Location, LocationMarker, LocationType,
-    Address, GeoCoordinates, VirtualLocation,
-    DefineLocation, UpdateLocation, SetParentLocation, RemoveParentLocation,
-    AddLocationMetadata, ArchiveLocation,
-    LocationDefined, LocationUpdated, ParentLocationSet, ParentLocationRemoved,
-    LocationMetadataAdded, LocationArchived,
-    LocationQueryHandler, FindLocationsQuery, GetLocationHierarchyQuery,
-    FindLocationsInBoundsQuery, LocationReadModel,
+    AddLocationMetadata, Address, ArchiveLocation, DefineLocation, FindLocationsInBoundsQuery,
+    FindLocationsQuery, GeoCoordinates, GetLocationHierarchyQuery, Location, LocationArchived,
+    LocationDefined, LocationMarker, LocationMetadataAdded, LocationQueryHandler,
+    LocationReadModel, LocationType, LocationUpdated, ParentLocationRemoved, ParentLocationSet,
+    RemoveParentLocation, SetParentLocation, UpdateLocation, VirtualLocation,
 };
-use cim_domain::{EntityId, CommandHandler, CommandEnvelope};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -40,7 +37,8 @@ fn test_l1_define_physical_location() {
         EntityId::from_uuid(location_id),
         "White House".to_string(),
         address.clone(),
-    ).unwrap();
+    )
+    .unwrap();
 
     assert_eq!(location.name, "White House");
     assert_eq!(location.location_type, LocationType::Physical);
@@ -62,16 +60,16 @@ fn test_l1_define_physical_location() {
 fn test_l2_define_virtual_location() {
     let location_id = Uuid::new_v4();
 
-    let virtual_location = VirtualLocation::website(
-        "https://zoom.us/j/123456789",
-        "Daily Standup".to_string()
-    ).unwrap();
+    let virtual_location =
+        VirtualLocation::website("https://zoom.us/j/123456789", "Daily Standup".to_string())
+            .unwrap();
 
     let location = Location::new_virtual(
         EntityId::from_uuid(location_id),
         "Daily Standup".to_string(),
         virtual_location.clone(),
-    ).unwrap();
+    )
+    .unwrap();
 
     assert_eq!(location.name, "Daily Standup");
     assert_eq!(location.location_type, LocationType::Virtual);
@@ -136,11 +134,8 @@ fn test_l4_location_hierarchy() {
         "62701".to_string(),
     );
 
-    let parent = Location::new_physical(
-        parent_id,
-        "Main Building".to_string(),
-        parent_address,
-    ).unwrap();
+    let parent =
+        Location::new_physical(parent_id, "Main Building".to_string(), parent_address).unwrap();
 
     // Create child location
     let child_address = Address::new(
@@ -151,11 +146,8 @@ fn test_l4_location_hierarchy() {
         "62701".to_string(),
     );
 
-    let mut child = Location::new_physical(
-        child_id,
-        "Suite 100".to_string(),
-        child_address,
-    ).unwrap();
+    let mut child =
+        Location::new_physical(child_id, "Suite 100".to_string(), child_address).unwrap();
 
     // Set parent relationship
     child.set_parent(parent_id).unwrap();
@@ -181,15 +173,16 @@ fn test_l5_metadata_management() {
     let location_id = EntityId::<LocationMarker>::new();
     let coordinates = GeoCoordinates::new(37.7749, -122.4194);
 
-    let mut location = Location::new_from_coordinates(
-        location_id,
-        "Test Location".to_string(),
-        coordinates,
-    ).unwrap();
+    let mut location =
+        Location::new_from_coordinates(location_id, "Test Location".to_string(), coordinates)
+            .unwrap();
 
     // Add single metadata
     location.add_metadata("building_code".to_string(), "B-123".to_string());
-    assert_eq!(location.get_metadata().get("building_code"), Some(&"B-123".to_string()));
+    assert_eq!(
+        location.get_metadata().get("building_code"),
+        Some(&"B-123".to_string())
+    );
 
     // Add bulk metadata
     let mut bulk_metadata = HashMap::new();
@@ -199,7 +192,10 @@ fn test_l5_metadata_management() {
     location.add_metadata_bulk(bulk_metadata);
 
     assert_eq!(location.get_metadata().get("floor"), Some(&"3".to_string()));
-    assert_eq!(location.get_metadata().get("capacity"), Some(&"50".to_string()));
+    assert_eq!(
+        location.get_metadata().get("capacity"),
+        Some(&"50".to_string())
+    );
     assert_eq!(location.get_metadata().len(), 3);
 }
 
@@ -218,11 +214,9 @@ fn test_l6_location_archiving() {
     let location_id = EntityId::<LocationMarker>::new();
     let coordinates = GeoCoordinates::new(40.7128, -74.0060);
 
-    let mut location = Location::new_from_coordinates(
-        location_id,
-        "Test Location".to_string(),
-        coordinates,
-    ).unwrap();
+    let mut location =
+        Location::new_from_coordinates(location_id, "Test Location".to_string(), coordinates)
+            .unwrap();
 
     // Initially not archived
     assert!(!location.is_archived());
@@ -236,12 +230,9 @@ fn test_l6_location_archiving() {
 
     // Cannot update archived location
     let new_coords = GeoCoordinates::new(34.0522, -118.2437);
-    assert!(location.update_details(
-        Some("New Name".to_string()),
-        None,
-        Some(new_coords),
-        None,
-    ).is_err());
+    assert!(location
+        .update_details(Some("New Name".to_string()), None, Some(new_coords), None,)
+        .is_err());
 }
 
 /// Test L7: Query handler functionality
@@ -266,7 +257,8 @@ async fn test_l7_query_handler() {
         EntityId::from_uuid(office_id),
         "San Francisco Office".to_string(),
         office_coords,
-    ).unwrap();
+    )
+    .unwrap();
 
     let warehouse_id = Uuid::new_v4();
     let warehouse_coords = GeoCoordinates::new(37.8044, -122.2712);
@@ -274,7 +266,8 @@ async fn test_l7_query_handler() {
         EntityId::from_uuid(warehouse_id),
         "Oakland Warehouse".to_string(),
         warehouse_coords,
-    ).unwrap();
+    )
+    .unwrap();
 
     // Add to query handler
     query_handler.upsert_location(&office);
@@ -338,7 +331,8 @@ async fn test_l8_location_bounds_queries() {
         EntityId::from_uuid(sf_id),
         "SF Location".to_string(),
         sf_coords,
-    ).unwrap();
+    )
+    .unwrap();
 
     // New York location
     let ny_id = Uuid::new_v4();
@@ -347,7 +341,8 @@ async fn test_l8_location_bounds_queries() {
         EntityId::from_uuid(ny_id),
         "NY Location".to_string(),
         ny_coords,
-    ).unwrap();
+    )
+    .unwrap();
 
     query_handler.upsert_location(&sf_location);
     query_handler.upsert_location(&ny_location);
@@ -386,17 +381,17 @@ async fn test_l9_location_statistics() {
         EntityId::from_uuid(physical_id),
         "Physical Location".to_string(),
         physical_coords,
-    ).unwrap();
+    )
+    .unwrap();
 
     let virtual_id = Uuid::new_v4();
     let virtual_location = Location::new_virtual(
         EntityId::from_uuid(virtual_id),
         "Virtual Meeting Room".to_string(),
-        VirtualLocation::website(
-            "https://zoom.us/j/123",
-            "Virtual Meeting Room".to_string()
-        ).unwrap(),
-    ).unwrap();
+        VirtualLocation::website("https://zoom.us/j/123", "Virtual Meeting Room".to_string())
+            .unwrap(),
+    )
+    .unwrap();
 
     // Create archived location
     let archived_id = Uuid::new_v4();
@@ -405,7 +400,8 @@ async fn test_l9_location_statistics() {
         EntityId::from_uuid(archived_id),
         "Archived Location".to_string(),
         archived_coords,
-    ).unwrap();
+    )
+    .unwrap();
     archived_location.archive().unwrap();
 
     query_handler.upsert_location(&physical_location);
@@ -445,7 +441,8 @@ async fn test_l10_complex_hierarchy() {
         EntityId::from_uuid(campus_id),
         "Tech Campus".to_string(),
         campus_coords,
-    ).unwrap();
+    )
+    .unwrap();
 
     // Create building (child of campus)
     let building_id = Uuid::new_v4();
@@ -454,7 +451,8 @@ async fn test_l10_complex_hierarchy() {
         EntityId::from_uuid(building_id),
         "Building A".to_string(),
         building_coords,
-    ).unwrap();
+    )
+    .unwrap();
     building.set_parent(EntityId::from_uuid(campus_id)).unwrap();
 
     // Create floor (child of building)
@@ -464,7 +462,8 @@ async fn test_l10_complex_hierarchy() {
         EntityId::from_uuid(floor_id),
         "Floor 3".to_string(),
         floor_coords,
-    ).unwrap();
+    )
+    .unwrap();
     floor.set_parent(EntityId::from_uuid(building_id)).unwrap();
 
     query_handler.upsert_location(&campus);
@@ -485,5 +484,8 @@ async fn test_l10_complex_hierarchy() {
     assert_eq!(hierarchy[0].children.len(), 1); // One building
     assert_eq!(hierarchy[0].children[0].location.name, "Building A");
     assert_eq!(hierarchy[0].children[0].children.len(), 1); // One floor
-    assert_eq!(hierarchy[0].children[0].children[0].location.name, "Floor 3");
+    assert_eq!(
+        hierarchy[0].children[0].children[0].location.name,
+        "Floor 3"
+    );
 }

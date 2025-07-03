@@ -27,7 +27,7 @@ pub use handlers::LocationCommandHandler;
 // Export projections
 pub use projections::*;
 // Export queries
-pub use queries::{GetLocation, GetLocationHierarchy, FindNearbyLocations};
+pub use queries::{FindNearbyLocations, GetLocation, GetLocationHierarchy};
 // Export query handler separately to avoid conflicts
 pub use queries::LocationQueryHandler as QueryHandler;
 pub use value_objects::*;

@@ -1,8 +1,8 @@
 //! Location query handlers and projections for CQRS read side
 
 use crate::aggregate::Location;
-use crate::value_objects::{LocationType, Address, GeoCoordinates, VirtualLocation};
-use cim_domain::{DomainError, DomainResult, AggregateRoot};
+use crate::value_objects::{Address, GeoCoordinates, LocationType, VirtualLocation};
+use cim_domain::{AggregateRoot, DomainError, DomainResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -116,8 +116,13 @@ impl LocationQueryHandler {
     }
 
     /// Find locations by query criteria
-    pub fn find_locations(&self, query: FindLocationsQuery) -> DomainResult<Vec<LocationReadModel>> {
-        let mut results: Vec<_> = self.locations.values()
+    pub fn find_locations(
+        &self,
+        query: FindLocationsQuery,
+    ) -> DomainResult<Vec<LocationReadModel>> {
+        let mut results: Vec<_> = self
+            .locations
+            .values()
             .filter(|location| {
                 // Filter by archived status
                 if !query.include_archived && location.archived {
@@ -126,7 +131,11 @@ impl LocationQueryHandler {
 
                 // Filter by name pattern
                 if let Some(ref pattern) = query.name_pattern {
-                    if !location.name.to_lowercase().contains(&pattern.to_lowercase()) {
+                    if !location
+                        .name
+                        .to_lowercase()
+                        .contains(&pattern.to_lowercase())
+                    {
                         return false;
                     }
                 }
@@ -185,14 +194,20 @@ impl LocationQueryHandler {
     }
 
     /// Get location hierarchy
-    pub fn get_hierarchy(&self, query: GetLocationHierarchyQuery) -> DomainResult<Vec<LocationHierarchy>> {
+    pub fn get_hierarchy(
+        &self,
+        query: GetLocationHierarchyQuery,
+    ) -> DomainResult<Vec<LocationHierarchy>> {
         let root_locations = if let Some(root_id) = query.root_location_id {
-            vec![self.locations.get(&root_id)
+            vec![self
+                .locations
+                .get(&root_id)
                 .ok_or_else(|| DomainError::generic(format!("Location {root_id} not found")))?
                 .clone()]
         } else {
             // Find all top-level locations (no parent)
-            self.locations.values()
+            self.locations
+                .values()
                 .filter(|loc| loc.parent_id.is_none())
                 .filter(|loc| query.include_archived || !loc.archived)
                 .cloned()
@@ -214,8 +229,13 @@ impl LocationQueryHandler {
     }
 
     /// Find locations within geographic bounds
-    pub fn find_in_bounds(&self, query: FindLocationsInBoundsQuery) -> DomainResult<Vec<LocationReadModel>> {
-        let results: Vec<_> = self.locations.values()
+    pub fn find_in_bounds(
+        &self,
+        query: FindLocationsInBoundsQuery,
+    ) -> DomainResult<Vec<LocationReadModel>> {
+        let results: Vec<_> = self
+            .locations
+            .values()
             .filter(|location| {
                 // Filter by archived status
                 if !query.include_archived && location.archived {
@@ -231,10 +251,10 @@ impl LocationQueryHandler {
 
                 // Filter by geographic bounds
                 if let Some(ref coords) = location.coordinates {
-                    coords.latitude >= query.southwest.latitude &&
-                    coords.latitude <= query.northeast.latitude &&
-                    coords.longitude >= query.southwest.longitude &&
-                    coords.longitude <= query.northeast.longitude
+                    coords.latitude >= query.southwest.latitude
+                        && coords.latitude <= query.northeast.latitude
+                        && coords.longitude >= query.southwest.longitude
+                        && coords.longitude <= query.northeast.longitude
                 } else {
                     false
                 }
@@ -246,8 +266,14 @@ impl LocationQueryHandler {
     }
 
     /// Find nearby locations
-    pub fn find_nearby(&self, center: GeoCoordinates, radius_meters: f64) -> DomainResult<Vec<LocationWithDistance>> {
-        let mut results: Vec<_> = self.locations.values()
+    pub fn find_nearby(
+        &self,
+        center: GeoCoordinates,
+        radius_meters: f64,
+    ) -> DomainResult<Vec<LocationWithDistance>> {
+        let mut results: Vec<_> = self
+            .locations
+            .values()
             .filter(|location| !location.archived)
             .filter_map(|location| {
                 if let Some(ref coords) = location.coordinates {
@@ -268,7 +294,9 @@ impl LocationQueryHandler {
 
         // Sort by distance
         results.sort_by(|a, b| {
-            a.distance_meters.partial_cmp(&b.distance_meters).unwrap_or(std::cmp::Ordering::Equal)
+            a.distance_meters
+                .partial_cmp(&b.distance_meters)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         Ok(results)
@@ -280,14 +308,17 @@ impl LocationQueryHandler {
         let archived = self.locations.values().filter(|loc| loc.archived).count();
         let active = total - archived;
 
-        let by_type = self.locations.values()
-            .filter(|loc| !loc.archived)
-            .fold(HashMap::new(), |mut acc, loc| {
+        let by_type = self.locations.values().filter(|loc| !loc.archived).fold(
+            HashMap::new(),
+            |mut acc, loc| {
                 *acc.entry(loc.location_type.clone()).or_insert(0) += 1;
                 acc
-            });
+            },
+        );
 
-        let with_coordinates = self.locations.values()
+        let with_coordinates = self
+            .locations
+            .values()
             .filter(|loc| loc.coordinates.is_some())
             .count();
 
@@ -318,10 +349,13 @@ impl LocationQueryHandler {
         };
 
         let children = if depth < max_depth {
-            self.locations.values()
+            self.locations
+                .values()
                 .filter(|child| child.parent_id == Some(location.id))
                 .filter(|child| include_archived || !child.archived)
-                .map(|child| self.build_hierarchy_recursive(child, depth + 1, max_depth, include_archived))
+                .map(|child| {
+                    self.build_hierarchy_recursive(child, depth + 1, max_depth, include_archived)
+                })
                 .collect()
         } else {
             Vec::new()
@@ -349,4 +383,4 @@ impl Default for LocationQueryHandler {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

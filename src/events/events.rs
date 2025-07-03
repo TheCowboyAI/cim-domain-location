@@ -1,6 +1,6 @@
 //! Location domain events
 
-use crate::value_objects::{LocationType, Address, GeoCoordinates, VirtualLocation};
+use crate::value_objects::{Address, GeoCoordinates, LocationType, VirtualLocation};
 use cim_domain::DomainEvent;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -107,75 +107,111 @@ pub trait LocationEvent: DomainEvent {
 
 // DomainEvent implementations
 impl DomainEvent for LocationDefined {
-    fn aggregate_id(&self) -> Uuid { self.location_id }
-    fn event_type(&self) -> &'static str { "LocationDefined" }
+    fn aggregate_id(&self) -> Uuid {
+        self.location_id
+    }
+    fn event_type(&self) -> &'static str {
+        "LocationDefined"
+    }
     fn subject(&self) -> String {
         format!("location.{}.defined", self.location_id)
     }
 }
 
 impl LocationEvent for LocationDefined {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl DomainEvent for LocationUpdated {
-    fn aggregate_id(&self) -> Uuid { self.location_id }
-    fn event_type(&self) -> &'static str { "LocationUpdated" }
+    fn aggregate_id(&self) -> Uuid {
+        self.location_id
+    }
+    fn event_type(&self) -> &'static str {
+        "LocationUpdated"
+    }
     fn subject(&self) -> String {
         format!("location.{}.updated", self.location_id)
     }
 }
 
 impl LocationEvent for LocationUpdated {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl DomainEvent for ParentLocationSet {
-    fn aggregate_id(&self) -> Uuid { self.location_id }
-    fn event_type(&self) -> &'static str { "ParentLocationSet" }
+    fn aggregate_id(&self) -> Uuid {
+        self.location_id
+    }
+    fn event_type(&self) -> &'static str {
+        "ParentLocationSet"
+    }
     fn subject(&self) -> String {
         format!("location.{}.parent_set", self.location_id)
     }
 }
 
 impl LocationEvent for ParentLocationSet {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl DomainEvent for ParentLocationRemoved {
-    fn aggregate_id(&self) -> Uuid { self.location_id }
-    fn event_type(&self) -> &'static str { "ParentLocationRemoved" }
+    fn aggregate_id(&self) -> Uuid {
+        self.location_id
+    }
+    fn event_type(&self) -> &'static str {
+        "ParentLocationRemoved"
+    }
     fn subject(&self) -> String {
         format!("location.{}.parent_removed", self.location_id)
     }
 }
 
 impl LocationEvent for ParentLocationRemoved {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl DomainEvent for LocationMetadataAdded {
-    fn aggregate_id(&self) -> Uuid { self.location_id }
-    fn event_type(&self) -> &'static str { "LocationMetadataAdded" }
+    fn aggregate_id(&self) -> Uuid {
+        self.location_id
+    }
+    fn event_type(&self) -> &'static str {
+        "LocationMetadataAdded"
+    }
     fn subject(&self) -> String {
         format!("location.{}.metadata_added", self.location_id)
     }
 }
 
 impl LocationEvent for LocationMetadataAdded {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl DomainEvent for LocationArchived {
-    fn aggregate_id(&self) -> Uuid { self.location_id }
-    fn event_type(&self) -> &'static str { "LocationArchived" }
+    fn aggregate_id(&self) -> Uuid {
+        self.location_id
+    }
+    fn event_type(&self) -> &'static str {
+        "LocationArchived"
+    }
     fn subject(&self) -> String {
         format!("location.{}.archived", self.location_id)
     }
 }
 
 impl LocationEvent for LocationArchived {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 #[cfg(test)]
@@ -217,7 +253,7 @@ mod tests {
         // Test DomainEvent trait
         assert_eq!(event.aggregate_id(), location_id);
         assert_eq!(event.event_type(), "LocationDefined");
-        assert_eq!(event.subject(), format!("location.{}.defined", location_id));
+        assert_eq!(event.subject(), format!("location.{location_id}.defined"));
 
         // Test serialization
         let json = serde_json::to_string(&event).unwrap();
@@ -269,7 +305,7 @@ mod tests {
         assert_eq!(event.location_id(), location_id);
         assert_eq!(event.aggregate_id(), location_id);
         assert_eq!(event.event_type(), "LocationUpdated");
-        assert_eq!(event.subject(), format!("location.{}.updated", location_id));
+        assert_eq!(event.subject(), format!("location.{location_id}.updated"));
         assert_eq!(event.reason, "Office relocation");
     }
 
@@ -297,7 +333,10 @@ mod tests {
         assert_eq!(event.location_id(), location_id);
         assert_eq!(event.aggregate_id(), location_id);
         assert_eq!(event.event_type(), "ParentLocationSet");
-        assert_eq!(event.subject(), format!("location.{}.parent_set", location_id));
+        assert_eq!(
+            event.subject(),
+            format!("location.{location_id}.parent_set")
+        );
         assert_eq!(event.parent_id, parent_id);
         assert_eq!(event.previous_parent_id, Some(previous_parent_id));
     }
@@ -324,7 +363,10 @@ mod tests {
         assert_eq!(event.location_id(), location_id);
         assert_eq!(event.aggregate_id(), location_id);
         assert_eq!(event.event_type(), "ParentLocationRemoved");
-        assert_eq!(event.subject(), format!("location.{}.parent_removed", location_id));
+        assert_eq!(
+            event.subject(),
+            format!("location.{}.parent_removed", self.location_id)
+        );
         assert_eq!(event.previous_parent_id, previous_parent_id);
     }
 
@@ -359,7 +401,10 @@ mod tests {
         assert_eq!(event.location_id(), location_id);
         assert_eq!(event.aggregate_id(), location_id);
         assert_eq!(event.event_type(), "LocationMetadataAdded");
-        assert_eq!(event.subject(), format!("location.{}.metadata_added", location_id));
+        assert_eq!(
+            event.subject(),
+            format!("location.{location_id}.metadata_added")
+        );
         assert_eq!(event.added_metadata.len(), 2);
         assert_eq!(event.current_metadata.len(), 3);
     }
@@ -386,7 +431,7 @@ mod tests {
         assert_eq!(event.location_id(), location_id);
         assert_eq!(event.aggregate_id(), location_id);
         assert_eq!(event.event_type(), "LocationArchived");
-        assert_eq!(event.subject(), format!("location.{}.archived", location_id));
+        assert_eq!(event.subject(), format!("location.{location_id}.archived"));
         assert_eq!(event.name, "Old Office");
         assert_eq!(event.location_type, LocationType::Physical);
     }
@@ -403,8 +448,7 @@ mod tests {
     #[test]
     fn test_event_serialization_roundtrip() {
         let location_id = Uuid::new_v4();
-        let coords = GeoCoordinates::new(40.7128, -74.0060)
-            .with_altitude(10.0);
+        let coords = GeoCoordinates::new(40.7128, -74.0060).with_altitude(10.0);
 
         let event = LocationDefined {
             location_id,
@@ -443,8 +487,9 @@ mod tests {
         let location_id = Uuid::new_v4();
         let virtual_loc = VirtualLocation::website(
             "https://discord.gg/abc123",
-            "Community Voice Channel".to_string()
-        ).unwrap();
+            "Community Voice Channel".to_string(),
+        )
+        .unwrap();
 
         let event = LocationDefined {
             location_id,

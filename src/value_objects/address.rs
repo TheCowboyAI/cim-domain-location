@@ -54,31 +54,31 @@ impl Address {
     pub fn validate(&self) -> DomainResult<()> {
         if self.street1.trim().is_empty() {
             return Err(DomainError::ValidationError(
-                "Street address cannot be empty".to_string()
+                "Street address cannot be empty".to_string(),
             ));
         }
 
         if self.locality.trim().is_empty() {
             return Err(DomainError::ValidationError(
-                "Locality cannot be empty".to_string()
+                "Locality cannot be empty".to_string(),
             ));
         }
 
         if self.region.trim().is_empty() {
             return Err(DomainError::ValidationError(
-                "Region cannot be empty".to_string()
+                "Region cannot be empty".to_string(),
             ));
         }
 
         if self.country.trim().is_empty() {
             return Err(DomainError::ValidationError(
-                "Country cannot be empty".to_string()
+                "Country cannot be empty".to_string(),
             ));
         }
 
         if self.postal_code.trim().is_empty() {
             return Err(DomainError::ValidationError(
-                "Postal code cannot be empty".to_string()
+                "Postal code cannot be empty".to_string(),
             ));
         }
 
@@ -103,18 +103,18 @@ impl Address {
 
         parts.join(", ")
     }
-    
+
     /// Format as multi-line string
     pub fn format_multi_line(&self) -> String {
         let mut lines = vec![self.street1.clone()];
-        
+
         if let Some(street2) = &self.street2 {
             lines.push(street2.clone());
         }
-        
+
         lines.push(format!("{}, {} {}", self.locality, self.region, self.postal_code));
         lines.push(self.country.clone());
-        
+
         lines.join("\n")
     }
-} 
+}

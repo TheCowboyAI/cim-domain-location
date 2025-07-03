@@ -1,8 +1,8 @@
 //! Domain events enum for location domain
 
 use crate::events::{
-    LocationDefined, LocationUpdated, ParentLocationSet, ParentLocationRemoved,
-    LocationMetadataAdded, LocationArchived
+    LocationArchived, LocationDefined, LocationMetadataAdded, LocationUpdated,
+    ParentLocationRemoved, ParentLocationSet,
 };
 use cim_domain::DomainEvent;
 use serde::{Deserialize, Serialize};

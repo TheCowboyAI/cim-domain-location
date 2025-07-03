@@ -3,12 +3,11 @@
 //! Location is an aggregate that can represent any identifiable place through
 //! various means: addresses, geo-coordinates, virtual locations, etc.
 
-use cim_domain::{AggregateRoot, Entity, EntityId, DomainError, DomainResult};
-use std::collections::HashMap;
 use crate::value_objects::{
-    LocationType, Address, GeoCoordinates, 
-    VirtualLocation as EnhancedVirtualLocation
+    Address, GeoCoordinates, LocationType, VirtualLocation as EnhancedVirtualLocation,
 };
+use cim_domain::{AggregateRoot, DomainError, DomainResult, Entity, EntityId};
+use std::collections::HashMap;
 
 /// Location aggregate - represents any identifiable place
 #[derive(Debug, Clone)]
@@ -119,7 +118,7 @@ impl Location {
 
         if self.location_type == LocationType::Virtual {
             return Err(DomainError::ValidationError(
-                "Cannot set physical address on virtual location".to_string()
+                "Cannot set physical address on virtual location".to_string(),
             ));
         }
 
@@ -134,7 +133,7 @@ impl Location {
 
         if self.location_type == LocationType::Virtual {
             return Err(DomainError::ValidationError(
-                "Cannot set coordinates on virtual location".to_string()
+                "Cannot set coordinates on virtual location".to_string(),
             ));
         }
 
@@ -148,7 +147,7 @@ impl Location {
         // Prevent self-reference
         if parent_id == self.entity.id {
             return Err(DomainError::ValidationError(
-                "Location cannot be its own parent".to_string()
+                "Location cannot be its own parent".to_string(),
             ));
         }
 
@@ -173,7 +172,7 @@ impl Location {
     ) -> DomainResult<()> {
         if self.archived {
             return Err(DomainError::ValidationError(
-                "Cannot update archived location".to_string()
+                "Cannot update archived location".to_string(),
             ));
         }
 
@@ -220,7 +219,7 @@ impl Location {
     pub fn remove_parent(&mut self) -> DomainResult<()> {
         if self.archived {
             return Err(DomainError::ValidationError(
-                "Cannot modify archived location".to_string()
+                "Cannot modify archived location".to_string(),
             ));
         }
 
@@ -233,7 +232,7 @@ impl Location {
     pub fn archive(&mut self) -> DomainResult<()> {
         if self.archived {
             return Err(DomainError::ValidationError(
-                "Location is already archived".to_string()
+                "Location is already archived".to_string(),
             ));
         }
 
@@ -270,12 +269,12 @@ impl AggregateRoot for Location {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::value_objects::{VirtualLocation as EnhancedVirtualLocation, VirtualLocationType, VirtualUrl, UrlType};
+    use crate::value_objects::{
+        UrlType, VirtualLocation as EnhancedVirtualLocation, VirtualLocationType, VirtualUrl,
+    };
 
     /// Test address validation
     ///
@@ -364,7 +363,8 @@ mod tests {
             "IL".to_string(),
             "USA".to_string(),
             "62701".to_string(),
-        ).with_street2("Apt 4B".to_string());
+        )
+        .with_street2("Apt 4B".to_string());
 
         assert_eq!(address.street2, Some("Apt 4B".to_string()));
 
@@ -455,11 +455,8 @@ mod tests {
             "95014".to_string(),
         );
 
-        let location = Location::new_physical(
-            location_id,
-            "Apple Park".to_string(),
-            address.clone(),
-        ).unwrap();
+        let location =
+            Location::new_physical(location_id, "Apple Park".to_string(), address.clone()).unwrap();
 
         assert_eq!(location.name, "Apple Park");
         assert_eq!(location.location_type, LocationType::Physical);
@@ -483,21 +480,24 @@ mod tests {
         let location_id = EntityId::<LocationMarker>::new();
 
         let virtual_loc = EnhancedVirtualLocation {
-            location_type: VirtualLocationType::MeetingRoom { platform: "Zoom".to_string() },
+            location_type: VirtualLocationType::MeetingRoom {
+                platform: "Zoom".to_string(),
+            },
             primary_identifier: "meeting-123".to_string(),
-            urls: vec![VirtualUrl::new("https://zoom.us/j/123".to_string(), UrlType::Primary).unwrap()],
+            urls: vec![
+                VirtualUrl::new("https://zoom.us/j/123".to_string(), UrlType::Primary).unwrap(),
+            ],
             ip_addresses: Vec::new(),
             network_info: None,
-            metadata: HashMap::from([
-                ("passcode".to_string(), "abc123".to_string()),
-            ]),
+            metadata: HashMap::from([("passcode".to_string(), "abc123".to_string())]),
         };
 
         let location = Location::new_virtual(
             location_id,
             "Team Standup Room".to_string(),
             virtual_loc.clone(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(location.name, "Team Standup Room");
         assert_eq!(location.location_type, LocationType::Virtual);
@@ -523,7 +523,8 @@ mod tests {
             location_id,
             "Golden Gate Bridge".to_string(),
             coords.clone(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(location.name, "Golden Gate Bridge");
         assert_eq!(location.location_type, LocationType::Physical);
@@ -546,15 +547,13 @@ mod tests {
             location_id,
             "Test Location".to_string(),
             GeoCoordinates::new(0.0, 0.0),
-        ).unwrap();
+        )
+        .unwrap();
 
         // Update name
-        location.update_details(
-            Some("Updated Location".to_string()),
-            None,
-            None,
-            None,
-        ).unwrap();
+        location
+            .update_details(Some("Updated Location".to_string()), None, None, None)
+            .unwrap();
 
         assert_eq!(location.name, "Updated Location");
 
@@ -567,12 +566,9 @@ mod tests {
             "94612".to_string(),
         );
 
-        location.update_details(
-            None,
-            Some(address.clone()),
-            None,
-            None,
-        ).unwrap();
+        location
+            .update_details(None, Some(address.clone()), None, None)
+            .unwrap();
 
         assert_eq!(location.address, Some(address));
     }
@@ -602,7 +598,8 @@ mod tests {
                 "Country".to_string(),
                 "12345".to_string(),
             ),
-        ).unwrap();
+        )
+        .unwrap();
 
         // Set parent
         child_location.set_parent(parent_id).unwrap();
@@ -638,7 +635,8 @@ mod tests {
                 "Techland".to_string(),
                 "00000".to_string(),
             ),
-        ).unwrap();
+        )
+        .unwrap();
 
         // Add single metadata
         location.add_metadata("capacity".to_string(), "50".to_string());
@@ -654,9 +652,15 @@ mod tests {
         location.add_metadata_bulk(bulk_metadata);
 
         assert_eq!(location.metadata.len(), 4);
-        assert_eq!(location.metadata.get("wifi"), Some(&"available".to_string()));
+        assert_eq!(
+            location.metadata.get("wifi"),
+            Some(&"available".to_string())
+        );
         assert_eq!(location.metadata.get("parking"), Some(&"free".to_string()));
-        assert_eq!(location.metadata.get("accessibility"), Some(&"wheelchair".to_string()));
+        assert_eq!(
+            location.metadata.get("accessibility"),
+            Some(&"wheelchair".to_string())
+        );
     }
 
     /// Test location archival
@@ -682,7 +686,8 @@ mod tests {
                 "Pastland".to_string(),
                 "99999".to_string(),
             ),
-        ).unwrap();
+        )
+        .unwrap();
 
         // Archive location
         assert!(!location.is_archived());
@@ -694,12 +699,7 @@ mod tests {
         assert!(result.is_err());
 
         // Try to update archived location
-        let result = location.update_details(
-            Some("New Name".to_string()),
-            None,
-            None,
-            None,
-        );
+        let result = location.update_details(Some("New Name".to_string()), None, None, None);
         assert!(result.is_err());
 
         // Try to remove parent on archived location
@@ -749,14 +749,17 @@ mod tests {
             location_id,
             "Virtual Meeting".to_string(),
             EnhancedVirtualLocation {
-                location_type: VirtualLocationType::MeetingRoom { platform: "Teams".to_string() },
+                location_type: VirtualLocationType::MeetingRoom {
+                    platform: "Teams".to_string(),
+                },
                 primary_identifier: "meeting-456".to_string(),
                 urls: Vec::new(),
                 ip_addresses: Vec::new(),
                 network_info: None,
                 metadata: HashMap::new(),
             },
-        ).unwrap();
+        )
+        .unwrap();
 
         // Cannot set address on virtual location
         let address = Address::new(
@@ -797,7 +800,8 @@ mod tests {
                 "Testland".to_string(),
                 "00000".to_string(),
             ),
-        ).unwrap();
+        )
+        .unwrap();
 
         // Check ID
         assert_eq!(location.id(), location_id);

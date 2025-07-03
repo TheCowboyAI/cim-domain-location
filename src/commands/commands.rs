@@ -1,7 +1,7 @@
 //! Location commands
 
 use crate::aggregate::LocationMarker;
-use crate::value_objects::{LocationType, Address, GeoCoordinates, VirtualLocation};
+use crate::value_objects::{Address, GeoCoordinates, LocationType, VirtualLocation};
 use cim_domain::{Command, EntityId};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -89,27 +89,39 @@ pub trait LocationCommand {
 }
 
 impl LocationCommand for DefineLocation {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl LocationCommand for UpdateLocation {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl LocationCommand for SetParentLocation {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl LocationCommand for RemoveParentLocation {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl LocationCommand for AddLocationMetadata {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 impl LocationCommand for ArchiveLocation {
-    fn location_id(&self) -> Uuid { self.location_id }
+    fn location_id(&self) -> Uuid {
+        self.location_id
+    }
 }
 
 // Command implementations

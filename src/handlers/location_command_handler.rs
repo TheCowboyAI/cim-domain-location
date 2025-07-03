@@ -1,19 +1,23 @@
 //! Location command handler
 
 use crate::aggregate::Location;
-use crate::value_objects::{LocationType, GeoCoordinates};
+use crate::value_objects::{GeoCoordinates, LocationType};
+use crate::LocationDomainEvent;
 use crate::{DefineLocation, LocationDefined};
 use cim_domain::{
-    CommandHandler, CommandEnvelope, CommandAcknowledgment, CommandStatus,
-    AggregateRepository, EntityId, CorrelationId,
+    AggregateRepository, CommandAcknowledgment, CommandEnvelope, CommandHandler, CommandStatus,
+    CorrelationId, EntityId,
 };
-use crate::LocationDomainEvent;
 use std::sync::Arc;
 
 /// Event publisher trait for location domain
 pub trait EventPublisher: Send + Sync {
     /// Publish domain events
-    fn publish_events(&self, events: Vec<LocationDomainEvent>, correlation_id: CorrelationId) -> Result<(), String>;
+    fn publish_events(
+        &self,
+        events: Vec<LocationDomainEvent>,
+        correlation_id: CorrelationId,
+    ) -> Result<(), String>;
 }
 
 /// Handles location-related commands
@@ -32,7 +36,9 @@ impl<R: AggregateRepository<Location>> LocationCommandHandler<R> {
     }
 }
 
-impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for LocationCommandHandler<R> {
+impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation>
+    for LocationCommandHandler<R>
+{
     fn handle(&mut self, envelope: CommandEnvelope<DefineLocation>) -> CommandAcknowledgment {
         let cmd = &envelope.command;
         let location_id = EntityId::from_uuid(cmd.location_id);
@@ -50,14 +56,21 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                 let location = match &cmd.location_type {
                     LocationType::Physical => {
                         if let Some(address) = &cmd.address {
-                            match Location::new_physical(location_id, cmd.name.clone(), address.clone()) {
+                            match Location::new_physical(
+                                location_id,
+                                cmd.name.clone(),
+                                address.clone(),
+                            ) {
                                 Ok(mut loc) => {
                                     // Add coordinates if provided
                                     if let Some(coords) = &cmd.coordinates {
                                         if let Err(e) = loc.set_coordinates(coords.clone()) {
                                             return CommandAcknowledgment {
                                                 command_id: envelope.id,
-                                                correlation_id: envelope.identity.correlation_id.clone(),
+                                                correlation_id: envelope
+                                                    .identity
+                                                    .correlation_id
+                                                    .clone(),
                                                 status: CommandStatus::Rejected,
                                                 reason: Some(format!("Invalid coordinates: {e}")),
                                             };
@@ -75,7 +88,11 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                 }
                             }
                         } else if let Some(coords) = &cmd.coordinates {
-                            match Location::new_from_coordinates(location_id, cmd.name.clone(), coords.clone()) {
+                            match Location::new_from_coordinates(
+                                location_id,
+                                cmd.name.clone(),
+                                coords.clone(),
+                            ) {
                                 Ok(loc) => loc,
                                 Err(e) => {
                                     return CommandAcknowledgment {
@@ -91,20 +108,29 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                 command_id: envelope.id,
                                 correlation_id: envelope.identity.correlation_id.clone(),
                                 status: CommandStatus::Rejected,
-                                reason: Some("Physical location requires either address or coordinates".to_string()),
+                                reason: Some(
+                                    "Physical location requires either address or coordinates"
+                                        .to_string(),
+                                ),
                             };
                         }
                     }
                     LocationType::Virtual => {
                         if let Some(virtual_loc) = &cmd.virtual_location {
-                            match Location::new_virtual(location_id, cmd.name.clone(), virtual_loc.clone()) {
+                            match Location::new_virtual(
+                                location_id,
+                                cmd.name.clone(),
+                                virtual_loc.clone(),
+                            ) {
                                 Ok(loc) => loc,
                                 Err(e) => {
                                     return CommandAcknowledgment {
                                         command_id: envelope.id,
                                         correlation_id: envelope.identity.correlation_id.clone(),
                                         status: CommandStatus::Rejected,
-                                        reason: Some(format!("Failed to create virtual location: {e}")),
+                                        reason: Some(format!(
+                                            "Failed to create virtual location: {e}"
+                                        )),
                                     };
                                 }
                             }
@@ -113,7 +139,10 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                                 command_id: envelope.id,
                                 correlation_id: envelope.identity.correlation_id.clone(),
                                 status: CommandStatus::Rejected,
-                                reason: Some("Virtual location requires virtual location details".to_string()),
+                                reason: Some(
+                                    "Virtual location requires virtual location details"
+                                        .to_string(),
+                                ),
                             };
                         }
                     }
@@ -123,7 +152,8 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                             location_id,
                             cmd.name.clone(),
                             GeoCoordinates::new(0.0, 0.0), // Default coordinates
-                        ).unwrap();
+                        )
+                        .unwrap();
                         loc.location_type = cmd.location_type.clone();
                         loc
                     }
@@ -151,10 +181,10 @@ impl<R: AggregateRepository<Location>> CommandHandler<DefineLocation> for Locati
                 });
 
                 // Publish the event
-                if let Err(e) = self.event_publisher.publish_events(
-                    vec![event], 
-                    envelope.identity.correlation_id.clone()
-                ) {
+                if let Err(e) = self
+                    .event_publisher
+                    .publish_events(vec![event], envelope.identity.correlation_id.clone())
+                {
                     // Log the error but don't fail the command
                     // Events can be retried or handled separately
                     eprintln!("Failed to publish LocationDefined event: {e}");

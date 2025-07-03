@@ -45,15 +45,15 @@ impl GeoCoordinates {
     /// Validate coordinate ranges
     pub fn validate(&self) -> DomainResult<()> {
         if self.latitude < -90.0 || self.latitude > 90.0 {
-            return Err(DomainError::ValidationError(
-                format!("Latitude {} is out of range [-90, 90]", self.latitude)
-            ));
+            return Err(DomainError::ValidationError(format!(
+                "Latitude {} is out of range [-90, 90]", self.latitude
+            )));
         }
 
         if self.longitude < -180.0 || self.longitude > 180.0 {
-            return Err(DomainError::ValidationError(
-                format!("Longitude {} is out of range [-180, 180]", self.longitude)
-            ));
+            return Err(DomainError::ValidationError(format!(
+                "Longitude {} is out of range [-180, 180]", self.longitude
+            )));
         }
 
         Ok(())
@@ -74,40 +74,40 @@ impl GeoCoordinates {
 
         EARTH_RADIUS_M * c
     }
-    
+
     /// Calculate bearing to another point (in degrees, 0-360)
     pub fn bearing_to(&self, other: &GeoCoordinates) -> f64 {
         let lat1 = self.latitude.to_radians();
         let lat2 = other.latitude.to_radians();
         let delta_lon = (other.longitude - self.longitude).to_radians();
-        
+
         let x = delta_lon.sin() * lat2.cos();
         let y = lat1.cos() * lat2.sin() - lat1.sin() * lat2.cos() * delta_lon.cos();
-        
-        let bearing_rad = x.atan2(y);  // Fixed: x.atan2(y) instead of y.atan2(x)
+
+        let bearing_rad = x.atan2(y); // Fixed: x.atan2(y) instead of y.atan2(x)
         let bearing_deg = bearing_rad.to_degrees();
-        
+
         // Normalize to 0-360 degrees
         (bearing_deg + 360.0) % 360.0
     }
-    
+
     /// Get a bounding box around this point
     pub fn bounding_box(&self, radius_meters: f64) -> BoundingBox {
         const EARTH_RADIUS_M: f64 = 6_371_000.0;
-        
+
         // Angular distance in radians
         let angular_distance = radius_meters / EARTH_RADIUS_M;
-        
+
         // Calculate latitude bounds
         let min_lat = self.latitude - angular_distance.to_degrees();
         let max_lat = self.latitude + angular_distance.to_degrees();
-        
+
         // Calculate longitude bounds (accounting for latitude)
         let lat_rad = self.latitude.to_radians();
         let delta_lon = (angular_distance / lat_rad.cos()).to_degrees();
         let min_lon = self.longitude - delta_lon;
         let max_lon = self.longitude + delta_lon;
-        
+
         BoundingBox {
             min_lat,
             max_lat,
@@ -134,7 +134,7 @@ impl BoundingBox {
             && coords.longitude >= self.min_lon
             && coords.longitude <= self.max_lon
     }
-    
+
     /// Calculate the center of the bounding box
     pub fn center(&self) -> GeoCoordinates {
         GeoCoordinates::new(
@@ -147,35 +147,43 @@ impl BoundingBox {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_distance_calculation() {
         // New York City
         let nyc = GeoCoordinates::new(40.7128, -74.0060);
-        
+
         // Los Angeles
         let la = GeoCoordinates::new(34.0522, -118.2437);
-        
+
         // Distance should be approximately 3935 km
         let distance = nyc.distance_to(&la);
         assert!((distance - 3_935_000.0).abs() < 10_000.0); // Within 10km accuracy
     }
-    
+
     #[test]
     fn test_bearing_calculation() {
         let start = GeoCoordinates::new(0.0, 0.0);
         let north = GeoCoordinates::new(1.0, 0.0);
         let east = GeoCoordinates::new(0.0, 1.0);
-        
+
         let bearing_north = start.bearing_to(&north);
         let bearing_east = start.bearing_to(&east);
-        
-        println!("Bearing to north: {}", bearing_north);
-        println!("Bearing to east: {}", bearing_east);
-        
+
+        println!("Bearing to north: {bearing_north}");
+        println!("Bearing to east: {bearing_east}");
+
         // North should be approximately 0 degrees
-        assert!((bearing_north - 0.0).abs() < 1.0, "North bearing {} should be close to 0", bearing_north);
-        // East should be approximately 90 degrees  
-        assert!((bearing_east - 90.0).abs() < 1.0, "East bearing {} should be close to 90", bearing_east);
+        assert!(
+            (bearing_north - 0.0).abs() < 1.0,
+            "North bearing {} should be close to 0",
+            bearing_north
+        );
+        // East should be approximately 90 degrees
+        assert!(
+            (bearing_east - 90.0).abs() < 1.0,
+            "East bearing {} should be close to 90",
+            bearing_east
+        );
     }
-} 
+}

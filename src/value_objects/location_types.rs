@@ -20,9 +20,9 @@ impl LocationType {
     pub fn can_have_physical_attributes(&self) -> bool {
         matches!(self, LocationType::Physical | LocationType::Hybrid)
     }
-    
+
     /// Check if location can have virtual attributes
     pub fn can_have_virtual_attributes(&self) -> bool {
         matches!(self, LocationType::Virtual | LocationType::Hybrid)
     }
-} 
+}
