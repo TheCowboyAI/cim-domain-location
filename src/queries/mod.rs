@@ -39,6 +39,12 @@ pub struct LocationQueryHandler {
     // Read model would be injected here
 }
 
+impl Default for LocationQueryHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LocationQueryHandler {
     pub fn new() -> Self {
         Self {}

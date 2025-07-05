@@ -96,7 +96,7 @@ impl LocationProjection for LocationReadModel {
         self.hierarchy
             .parent_child_map
             .entry(event.parent_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(event.location_id);
     }
 
