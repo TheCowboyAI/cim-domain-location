@@ -11,8 +11,8 @@ categories = ["data-structures", "asynchronous"]
 
 [dependencies]
 # Core dependencies
-cim-domain = { path = "../cim-domain" }
-cim-subject = { path = "../cim-domain/crates/cim-subject" }
+cim-domain = { git = "https://github.com/TheCowboyAI/cim-domain.git", branch = "main" }
+cim-subject = { git = "https://github.com/TheCowboyAI/cim-domain.git", branch = "main" }
 cim-infrastructure = { path = "../cim-infrastructure" }
 
 # Async runtime
