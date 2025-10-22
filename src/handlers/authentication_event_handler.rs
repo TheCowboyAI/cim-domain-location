@@ -47,10 +47,6 @@ pub struct LocationValidated {
 }
 
 impl DomainEvent for LocationValidated {
-    fn subject(&self) -> String {
-        format!("location.{}.validated", self.request_id)
-    }
-
     fn aggregate_id(&self) -> Uuid {
         self.request_id
     }

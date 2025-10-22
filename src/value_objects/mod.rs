@@ -12,3 +12,7 @@ pub use address::*;
 pub use coordinates::*;
 pub use location_types::*;
 pub use virtual_location::*;
+
+// Type aliases for backward compatibility
+pub use coordinates::GeoCoordinates as Coordinates;
+pub use location_types::LocationType as LocationTypes;

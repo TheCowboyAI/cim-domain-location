@@ -25,17 +25,6 @@ pub enum LocationDomainEvent {
 }
 
 impl DomainEvent for LocationDomainEvent {
-    fn subject(&self) -> String {
-        match self {
-            Self::LocationDefined(e) => e.subject(),
-            Self::LocationUpdated(e) => e.subject(),
-            Self::ParentLocationSet(e) => e.subject(),
-            Self::ParentLocationRemoved(e) => e.subject(),
-            Self::LocationMetadataAdded(e) => e.subject(),
-            Self::LocationArchived(e) => e.subject(),
-        }
-    }
-
     fn aggregate_id(&self) -> uuid::Uuid {
         match self {
             Self::LocationDefined(e) => e.aggregate_id(),

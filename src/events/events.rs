@@ -113,9 +113,6 @@ impl DomainEvent for LocationDefined {
     fn event_type(&self) -> &'static str {
         "LocationDefined"
     }
-    fn subject(&self) -> String {
-        format!("location.{}.defined", self.location_id)
-    }
 }
 
 impl LocationEvent for LocationDefined {
@@ -130,9 +127,6 @@ impl DomainEvent for LocationUpdated {
     }
     fn event_type(&self) -> &'static str {
         "LocationUpdated"
-    }
-    fn subject(&self) -> String {
-        format!("location.{}.updated", self.location_id)
     }
 }
 
@@ -149,9 +143,6 @@ impl DomainEvent for ParentLocationSet {
     fn event_type(&self) -> &'static str {
         "ParentLocationSet"
     }
-    fn subject(&self) -> String {
-        format!("location.{}.parent_set", self.location_id)
-    }
 }
 
 impl LocationEvent for ParentLocationSet {
@@ -166,9 +157,6 @@ impl DomainEvent for ParentLocationRemoved {
     }
     fn event_type(&self) -> &'static str {
         "ParentLocationRemoved"
-    }
-    fn subject(&self) -> String {
-        format!("location.{}.parent_removed", self.location_id)
     }
 }
 
@@ -185,9 +173,6 @@ impl DomainEvent for LocationMetadataAdded {
     fn event_type(&self) -> &'static str {
         "LocationMetadataAdded"
     }
-    fn subject(&self) -> String {
-        format!("location.{}.metadata_added", self.location_id)
-    }
 }
 
 impl LocationEvent for LocationMetadataAdded {
@@ -202,9 +187,6 @@ impl DomainEvent for LocationArchived {
     }
     fn event_type(&self) -> &'static str {
         "LocationArchived"
-    }
-    fn subject(&self) -> String {
-        format!("location.{}.archived", self.location_id)
     }
 }
 
