@@ -12,6 +12,9 @@
 
   outputs = { self, nixpkgs, flake-utils, rust-overlay }:
     let
+      # Unified leaf node module (works on both NixOS and nix-darwin)
+      leafModule = import ./deployment/nix/leaf.nix;
+
       # NixOS modules (system-independent)
       nixosModules = {
         default = import ./deployment/nix/container.nix;
@@ -52,7 +55,7 @@
     in
     {
       # Expose modules and configurations
-      inherit nixosModules darwinModules nixosConfigurations;
+      inherit leafModule nixosModules darwinModules nixosConfigurations;
     } //
     flake-utils.lib.eachDefaultSystem (system:
       let
@@ -137,6 +140,10 @@
             echo "  cargo build --bin location-service  # Build NATS service"
             echo "  nix build .#location-service         # Build service with Nix"
             echo "  nix build .#location-lxc             # Build LXC container"
+            echo ""
+            echo "Leaf node deployment:"
+            echo "  Use 'leafModule' output in your leaf node configuration"
+            echo "  See deployment/LEAF_NODE_DEPLOYMENT.md for details"
           '';
         };
       });
