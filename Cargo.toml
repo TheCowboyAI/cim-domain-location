@@ -62,6 +62,10 @@ geo = "0.26"
 # Random number generation for testing
 rand = "0.8"
 
+[[bin]]
+name = "location-service"
+path = "src/bin/location-service.rs"
+
 [dev-dependencies]
 tokio-test = "0.4"
 proptest = "1.6"
