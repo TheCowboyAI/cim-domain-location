@@ -250,6 +250,86 @@ impl Location {
     pub fn get_metadata(&self) -> &HashMap<String, String> {
         &self.metadata
     }
+
+    // ==================== Pure Functional Event Application (CT/FRP) ====================
+
+    /// Apply an event to create a new aggregate state (pure function)
+    ///
+    /// This is the core of the pure functional architecture following Category Theory (CT)
+    /// and Functional Reactive Programming (FRP) principles.
+    ///
+    /// Instead of mutating `&mut self`, we create and return a new aggregate instance.
+    /// This enables:
+    /// - Event sourcing (aggregate state derived from events)
+    /// - Time travel debugging (replay events to any point)
+    /// - Audit trails (complete history of all changes)
+    /// - Concurrency safety (no shared mutable state)
+    pub fn apply_event_pure(&self, event: &crate::LocationDomainEvent) -> DomainResult<Self> {
+        use crate::LocationDomainEvent;
+
+        let mut new_aggregate = self.clone();
+
+        match event {
+            LocationDomainEvent::LocationDefined(e) => {
+                // This event creates the location, so we construct from scratch
+                new_aggregate.entity = Entity::with_id(EntityId::from_uuid(e.location_id));
+                new_aggregate.version = 0;
+                new_aggregate.name = e.name.clone();
+                new_aggregate.location_type = e.location_type.clone();
+                new_aggregate.address = e.address.clone();
+                new_aggregate.coordinates = e.coordinates.clone();
+                new_aggregate.virtual_location = e.virtual_location.clone();
+                new_aggregate.parent_id = e.parent_id.map(EntityId::from_uuid);
+                new_aggregate.metadata = HashMap::new();
+                new_aggregate.archived = false;
+            }
+            LocationDomainEvent::LocationUpdated(e) => {
+                // Apply changes from the update event
+                if let Some(name) = &e.name {
+                    new_aggregate.name = name.clone();
+                }
+                if let Some(address) = &e.address {
+                    new_aggregate.address = Some(address.clone());
+                }
+                if let Some(coordinates) = &e.coordinates {
+                    new_aggregate.coordinates = Some(coordinates.clone());
+                }
+                if let Some(virtual_location) = &e.virtual_location {
+                    new_aggregate.virtual_location = Some(virtual_location.clone());
+                }
+                new_aggregate.entity.touch();
+            }
+            LocationDomainEvent::ParentLocationSet(e) => {
+                new_aggregate.parent_id = Some(EntityId::from_uuid(e.parent_id));
+                new_aggregate.entity.touch();
+            }
+            LocationDomainEvent::ParentLocationRemoved(_e) => {
+                new_aggregate.parent_id = None;
+                new_aggregate.entity.touch();
+            }
+            LocationDomainEvent::LocationMetadataAdded(e) => {
+                for (key, value) in &e.added_metadata {
+                    new_aggregate.metadata.insert(key.clone(), value.clone());
+                }
+                new_aggregate.entity.touch();
+            }
+            LocationDomainEvent::LocationArchived(_e) => {
+                new_aggregate.archived = true;
+                new_aggregate.entity.touch();
+            }
+        }
+
+        Ok(new_aggregate)
+    }
+
+    /// Apply an event (mutable wrapper for backward compatibility)
+    ///
+    /// This provides backward compatibility with existing code that uses mutable patterns.
+    /// Internally, it uses the pure functional `apply_event_pure` method.
+    pub fn apply_event(&mut self, event: &crate::LocationDomainEvent) -> DomainResult<()> {
+        *self = self.apply_event_pure(event)?;
+        Ok(())
+    }
 }
 
 impl AggregateRoot for Location {

@@ -313,11 +313,11 @@ mod tests {
     async fn test_mock_geocoding_service() {
         let service = MockGeocodingService::new();
         let address = Address::new(
-            Some("123 Test Street".to_string()),
-            Some("Test City".to_string()),
-            Some("CA".to_string()),
-            Some("12345".to_string()),
-            Some("US".to_string()),
+            "123 Test Street".to_string(),
+            "Test City".to_string(),
+            "CA".to_string(),
+            "US".to_string(),
+            "12345".to_string(),
         );
         
         let result = service.geocode(&address).await.unwrap();
@@ -330,13 +330,13 @@ mod tests {
     #[tokio::test]
     async fn test_reverse_geocoding() {
         let service = MockGeocodingService::new();
-        let coordinates = Coordinates::new(37.7749, -122.4194).unwrap();
+        let coordinates = Coordinates::new(37.7749, -122.4194);
         
         let result = service.reverse_geocode(&coordinates).await.unwrap();
         
         assert_eq!(result.input_coordinates, coordinates);
         assert!(result.confidence_score > 0.0);
-        assert!(result.address.street.is_some());
+        assert!(!result.address.street1.is_empty());
     }
     
     #[tokio::test]
@@ -345,11 +345,11 @@ mod tests {
         
         // Valid address
         let valid_address = Address::new(
-            Some("123 Test Street".to_string()),
-            Some("Test City".to_string()),
-            Some("CA".to_string()),
-            Some("12345".to_string()),
-            Some("US".to_string()),
+            "123 Test Street".to_string(),
+            "Test City".to_string(),
+            "CA".to_string(),
+            "US".to_string(),
+            "12345".to_string(),
         );
         
         let result = service.validate_address(&valid_address).await.unwrap();
@@ -358,11 +358,11 @@ mod tests {
         
         // Invalid address (missing street)
         let invalid_address = Address::new(
-            None,
-            Some("Test City".to_string()),
-            Some("CA".to_string()),
-            Some("12345".to_string()),
-            Some("US".to_string()),
+            "".to_string(),
+            "Test City".to_string(),
+            "CA".to_string(),
+            "US".to_string(),
+            "12345".to_string(),
         );
         
         let result = service.validate_address(&invalid_address).await.unwrap();
@@ -375,18 +375,18 @@ mod tests {
         let service = MockGeocodingService::new();
         let addresses = vec![
             Address::new(
-                Some("123 First Street".to_string()),
-                Some("Test City".to_string()),
-                Some("CA".to_string()),
-                Some("12345".to_string()),
-                Some("US".to_string()),
+                "123 First Street".to_string(),
+                "Test City".to_string(),
+                "CA".to_string(),
+                "US".to_string(),
+                "12345".to_string(),
             ),
             Address::new(
-                Some("456 Second Street".to_string()),
-                Some("Test City".to_string()),
-                Some("CA".to_string()),
-                Some("12345".to_string()),
-                Some("US".to_string()),
+                "456 Second Street".to_string(),
+                "Test City".to_string(),
+                "CA".to_string(),
+                "US".to_string(),
+                "12345".to_string(),
             ),
         ];
         
@@ -401,11 +401,11 @@ mod tests {
     async fn test_service_failure_simulation() {
         let service = MockGeocodingService::new().with_fail_rate(1.0); // Always fail
         let address = Address::new(
-            Some("123 Test Street".to_string()),
-            Some("Test City".to_string()),
-            Some("CA".to_string()),
-            Some("12345".to_string()),
-            Some("US".to_string()),
+            "123 Test Street".to_string(),
+            "Test City".to_string(),
+            "CA".to_string(),
+            "US".to_string(),
+            "12345".to_string(),
         );
         
         let result = service.geocode(&address).await;

@@ -115,6 +115,12 @@ impl DomainEvent for LocationDefined {
     }
 }
 
+impl LocationDefined {
+    pub fn subject(&self) -> String {
+        format!("location.{}.defined", self.location_id)
+    }
+}
+
 impl LocationEvent for LocationDefined {
     fn location_id(&self) -> Uuid {
         self.location_id
@@ -127,6 +133,12 @@ impl DomainEvent for LocationUpdated {
     }
     fn event_type(&self) -> &'static str {
         "LocationUpdated"
+    }
+}
+
+impl LocationUpdated {
+    pub fn subject(&self) -> String {
+        format!("location.{}.updated", self.location_id)
     }
 }
 
@@ -145,6 +157,12 @@ impl DomainEvent for ParentLocationSet {
     }
 }
 
+impl ParentLocationSet {
+    pub fn subject(&self) -> String {
+        format!("location.{}.parent.set", self.location_id)
+    }
+}
+
 impl LocationEvent for ParentLocationSet {
     fn location_id(&self) -> Uuid {
         self.location_id
@@ -157,6 +175,12 @@ impl DomainEvent for ParentLocationRemoved {
     }
     fn event_type(&self) -> &'static str {
         "ParentLocationRemoved"
+    }
+}
+
+impl ParentLocationRemoved {
+    pub fn subject(&self) -> String {
+        format!("location.{}.parent.removed", self.location_id)
     }
 }
 
@@ -175,6 +199,12 @@ impl DomainEvent for LocationMetadataAdded {
     }
 }
 
+impl LocationMetadataAdded {
+    pub fn subject(&self) -> String {
+        format!("location.{}.metadata.added", self.location_id)
+    }
+}
+
 impl LocationEvent for LocationMetadataAdded {
     fn location_id(&self) -> Uuid {
         self.location_id
@@ -187,6 +217,12 @@ impl DomainEvent for LocationArchived {
     }
     fn event_type(&self) -> &'static str {
         "LocationArchived"
+    }
+}
+
+impl LocationArchived {
+    pub fn subject(&self) -> String {
+        format!("location.{}.archived", self.location_id)
     }
 }
 
@@ -210,7 +246,7 @@ mod tests {
     /// ```
     #[test]
     fn test_location_defined_event() {
-        let location_id = Uuid::new_v4();
+        let location_id = Uuid::now_v7();
         let address = Address::new(
             "123 Main St".to_string(),
             "City".to_string(),
@@ -255,7 +291,7 @@ mod tests {
     /// ```
     #[test]
     fn test_location_updated_event() {
-        let location_id = Uuid::new_v4();
+        let location_id = Uuid::now_v7();
         let old_address = Address::new(
             "123 Main St".to_string(),
             "Old City".to_string(),
@@ -301,9 +337,9 @@ mod tests {
     /// ```
     #[test]
     fn test_parent_location_set_event() {
-        let location_id = Uuid::new_v4();
-        let parent_id = Uuid::new_v4();
-        let previous_parent_id = Uuid::new_v4();
+        let location_id = Uuid::now_v7();
+        let parent_id = Uuid::now_v7();
+        let previous_parent_id = Uuid::now_v7();
 
         let event = ParentLocationSet {
             location_id,
@@ -333,8 +369,8 @@ mod tests {
     /// ```
     #[test]
     fn test_parent_location_removed_event() {
-        let location_id = Uuid::new_v4();
-        let previous_parent_id = Uuid::new_v4();
+        let location_id = Uuid::now_v7();
+        let previous_parent_id = Uuid::now_v7();
 
         let event = ParentLocationRemoved {
             location_id,
@@ -347,7 +383,7 @@ mod tests {
         assert_eq!(event.event_type(), "ParentLocationRemoved");
         assert_eq!(
             event.subject(),
-            format!("location.{}.parent_removed", self.location_id)
+            format!("location.{}.parent.removed", location_id)
         );
         assert_eq!(event.previous_parent_id, previous_parent_id);
     }
@@ -362,7 +398,7 @@ mod tests {
     /// ```
     #[test]
     fn test_location_metadata_added_event() {
-        let location_id = Uuid::new_v4();
+        let location_id = Uuid::now_v7();
         let added_metadata = HashMap::from([
             ("capacity".to_string(), "100".to_string()),
             ("wifi".to_string(), "available".to_string()),
@@ -401,7 +437,7 @@ mod tests {
     /// ```
     #[test]
     fn test_location_archived_event() {
-        let location_id = Uuid::new_v4();
+        let location_id = Uuid::now_v7();
 
         let event = LocationArchived {
             location_id,
@@ -429,7 +465,7 @@ mod tests {
     /// ```
     #[test]
     fn test_event_serialization_roundtrip() {
-        let location_id = Uuid::new_v4();
+        let location_id = Uuid::now_v7();
         let coords = GeoCoordinates::new(40.7128, -74.0060).with_altitude(10.0);
 
         let event = LocationDefined {
@@ -439,7 +475,7 @@ mod tests {
             address: None,
             coordinates: Some(coords.clone()),
             virtual_location: None,
-            parent_id: Some(Uuid::new_v4()),
+            parent_id: Some(Uuid::now_v7()),
         };
 
         // Serialize to JSON
@@ -466,7 +502,7 @@ mod tests {
     /// ```
     #[test]
     fn test_virtual_location_event() {
-        let location_id = Uuid::new_v4();
+        let location_id = Uuid::now_v7();
         let virtual_loc = VirtualLocation::website(
             "https://discord.gg/abc123",
             "Community Voice Channel".to_string(),

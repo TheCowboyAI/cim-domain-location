@@ -95,7 +95,7 @@ pub struct SpatialQuery {
 }
 
 /// Types of spatial queries
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SpatialQueryType {
     WithinRadius,
     WithinBounds,
@@ -536,10 +536,10 @@ mod tests {
     #[tokio::test]
     async fn test_find_within_radius() {
         let service = MockSpatialSearchService::new();
-        let center = Coordinates::new(37.7749, -122.4194).unwrap();
+        let center = Coordinates::new(37.7749, -122.4194);
         
         let result = service.find_within_radius(&center, 1000.0, None).await.unwrap();
-        
+
         assert!(!result.locations.is_empty());
         assert_eq!(result.query.query_type, SpatialQueryType::WithinRadius);
     }
@@ -547,7 +547,7 @@ mod tests {
     #[tokio::test]
     async fn test_invalid_radius() {
         let service = MockSpatialSearchService::new();
-        let center = Coordinates::new(37.7749, -122.4194).unwrap();
+        let center = Coordinates::new(37.7749, -122.4194);
         
         let result = service.find_within_radius(&center, -100.0, None).await;
         
@@ -561,11 +561,11 @@ mod tests {
     #[tokio::test]
     async fn test_find_within_bounds() {
         let service = MockSpatialSearchService::new();
-        let southwest = Coordinates::new(37.7000, -122.5000).unwrap();
-        let northeast = Coordinates::new(37.8000, -122.4000).unwrap();
+        let southwest = Coordinates::new(37.7000, -122.5000);
+        let northeast = Coordinates::new(37.8000, -122.4000);
         
         let result = service.find_within_bounds(&southwest, &northeast, None).await.unwrap();
-        
+
         assert!(!result.locations.is_empty());
         assert_eq!(result.query.query_type, SpatialQueryType::WithinBounds);
     }
@@ -574,8 +574,8 @@ mod tests {
     async fn test_invalid_bounds() {
         let service = MockSpatialSearchService::new();
         // Invalid bounds: southwest is northeast of northeast
-        let southwest = Coordinates::new(37.8000, -122.4000).unwrap();
-        let northeast = Coordinates::new(37.7000, -122.5000).unwrap();
+        let southwest = Coordinates::new(37.8000, -122.4000);
+        let northeast = Coordinates::new(37.7000, -122.5000);
         
         let result = service.find_within_bounds(&southwest, &northeast, None).await;
         
@@ -589,10 +589,10 @@ mod tests {
     #[tokio::test]
     async fn test_find_nearest() {
         let service = MockSpatialSearchService::new();
-        let point = Coordinates::new(37.7749, -122.4194).unwrap();
+        let point = Coordinates::new(37.7749, -122.4194);
         
         let result = service.find_nearest(&point, 1, None, None).await.unwrap();
-        
+
         assert_eq!(result.locations.len(), 1);
         assert_eq!(result.query.query_type, SpatialQueryType::Nearest);
     }
@@ -601,12 +601,12 @@ mod tests {
     async fn test_spatial_statistics() {
         let service = MockSpatialSearchService::new();
         let region = SpatialRegion::Circle {
-            center: Coordinates::new(37.7749, -122.4194).unwrap(),
+            center: Coordinates::new(37.7749, -122.4194),
             radius_meters: 1000.0,
         };
         
         let result = service.get_spatial_statistics(&region, None).await.unwrap();
-        
+
         assert!(result.total_locations > 0);
         assert!(!result.location_type_breakdown.is_empty());
         assert!(!result.hotspots.is_empty());
@@ -615,7 +615,7 @@ mod tests {
     #[tokio::test]
     async fn test_search_with_filters() {
         let service = MockSpatialSearchService::new();
-        let center = Coordinates::new(37.7749, -122.4194).unwrap();
+        let center = Coordinates::new(37.7749, -122.4194);
         let filters = SpatialSearchFilters {
             location_types: Some(vec![LocationTypes::Physical]),
             tags: Some(vec!["test".to_string()]),
@@ -629,7 +629,7 @@ mod tests {
         };
         
         let result = service.find_within_radius(&center, 1000.0, Some(filters)).await.unwrap();
-        
+
         // All results should match the filter criteria
         for location in &result.locations {
             assert_eq!(location.location_type, LocationTypes::Physical);

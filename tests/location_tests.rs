@@ -2,11 +2,9 @@
 
 use cim_domain::{CommandEnvelope, CommandHandler, EntityId};
 use cim_domain_location::{
-    AddLocationMetadata, Address, ArchiveLocation, DefineLocation, FindLocationsInBoundsQuery,
-    FindLocationsQuery, GeoCoordinates, GetLocationHierarchyQuery, Location, LocationArchived,
-    LocationDefined, LocationMarker, LocationMetadataAdded, LocationQueryHandler,
-    LocationReadModel, LocationType, LocationUpdated, ParentLocationRemoved, ParentLocationSet,
-    RemoveParentLocation, SetParentLocation, UpdateLocation, VirtualLocation,
+    commands::*, events::*, aggregate::*, value_objects::*,
+    queries::*, QueryHandler, LocationCommandHandler,
+    projections::*,
 };
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -23,7 +21,7 @@ use uuid::Uuid;
 /// ```
 #[test]
 fn test_l1_define_physical_location() {
-    let location_id = Uuid::new_v4();
+    let location_id = Uuid::now_v7();
 
     let address = Address::new(
         "1600 Pennsylvania Avenue NW".to_string(),
@@ -58,7 +56,7 @@ fn test_l1_define_physical_location() {
 /// ```
 #[test]
 fn test_l2_define_virtual_location() {
-    let location_id = Uuid::new_v4();
+    let location_id = Uuid::now_v7();
 
     let virtual_location =
         VirtualLocation::website("https://zoom.us/j/123456789", "Daily Standup".to_string())
@@ -251,7 +249,7 @@ async fn test_l7_query_handler() {
     let mut query_handler = LocationQueryHandler::new();
 
     // Create test locations
-    let office_id = Uuid::new_v4();
+    let office_id = Uuid::now_v7();
     let office_coords = GeoCoordinates::new(37.7749, -122.4194);
     let office = Location::new_from_coordinates(
         EntityId::from_uuid(office_id),
@@ -260,7 +258,7 @@ async fn test_l7_query_handler() {
     )
     .unwrap();
 
-    let warehouse_id = Uuid::new_v4();
+    let warehouse_id = Uuid::now_v7();
     let warehouse_coords = GeoCoordinates::new(37.8044, -122.2712);
     let warehouse = Location::new_from_coordinates(
         EntityId::from_uuid(warehouse_id),
@@ -325,7 +323,7 @@ async fn test_l8_location_bounds_queries() {
     let mut query_handler = LocationQueryHandler::new();
 
     // San Francisco location
-    let sf_id = Uuid::new_v4();
+    let sf_id = Uuid::now_v7();
     let sf_coords = GeoCoordinates::new(37.7749, -122.4194);
     let sf_location = Location::new_from_coordinates(
         EntityId::from_uuid(sf_id),
@@ -335,7 +333,7 @@ async fn test_l8_location_bounds_queries() {
     .unwrap();
 
     // New York location
-    let ny_id = Uuid::new_v4();
+    let ny_id = Uuid::now_v7();
     let ny_coords = GeoCoordinates::new(40.7128, -74.0060);
     let ny_location = Location::new_from_coordinates(
         EntityId::from_uuid(ny_id),
@@ -375,7 +373,7 @@ async fn test_l9_location_statistics() {
     let mut query_handler = LocationQueryHandler::new();
 
     // Create various types of locations
-    let physical_id = Uuid::new_v4();
+    let physical_id = Uuid::now_v7();
     let physical_coords = GeoCoordinates::new(37.7749, -122.4194);
     let physical_location = Location::new_from_coordinates(
         EntityId::from_uuid(physical_id),
@@ -384,7 +382,7 @@ async fn test_l9_location_statistics() {
     )
     .unwrap();
 
-    let virtual_id = Uuid::new_v4();
+    let virtual_id = Uuid::now_v7();
     let virtual_location = Location::new_virtual(
         EntityId::from_uuid(virtual_id),
         "Virtual Meeting Room".to_string(),
@@ -394,7 +392,7 @@ async fn test_l9_location_statistics() {
     .unwrap();
 
     // Create archived location
-    let archived_id = Uuid::new_v4();
+    let archived_id = Uuid::now_v7();
     let archived_coords = GeoCoordinates::new(40.7128, -74.0060);
     let mut archived_location = Location::new_from_coordinates(
         EntityId::from_uuid(archived_id),
@@ -435,7 +433,7 @@ async fn test_l10_complex_hierarchy() {
     let mut query_handler = LocationQueryHandler::new();
 
     // Create campus (root)
-    let campus_id = Uuid::new_v4();
+    let campus_id = Uuid::now_v7();
     let campus_coords = GeoCoordinates::new(37.7749, -122.4194);
     let campus = Location::new_from_coordinates(
         EntityId::from_uuid(campus_id),
@@ -445,7 +443,7 @@ async fn test_l10_complex_hierarchy() {
     .unwrap();
 
     // Create building (child of campus)
-    let building_id = Uuid::new_v4();
+    let building_id = Uuid::now_v7();
     let building_coords = GeoCoordinates::new(37.7750, -122.4195);
     let mut building = Location::new_from_coordinates(
         EntityId::from_uuid(building_id),
@@ -456,7 +454,7 @@ async fn test_l10_complex_hierarchy() {
     building.set_parent(EntityId::from_uuid(campus_id)).unwrap();
 
     // Create floor (child of building)
-    let floor_id = Uuid::new_v4();
+    let floor_id = Uuid::now_v7();
     let floor_coords = GeoCoordinates::new(37.7750, -122.4195);
     let mut floor = Location::new_from_coordinates(
         EntityId::from_uuid(floor_id),

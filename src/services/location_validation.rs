@@ -159,12 +159,12 @@ mod tests {
         let service = MockLocationValidationService;
         
         // Valid coordinates
-        let valid_coords = Coordinates::new(37.7749, -122.4194).unwrap();
+        let valid_coords = Coordinates::new(37.7749, -122.4194);
         let result = service.validate_coordinates(&valid_coords).await.unwrap();
         assert!(result.is_valid);
-        
+
         // Invalid latitude
-        let invalid_coords = Coordinates::new(91.0, -122.4194).unwrap();
+        let invalid_coords = Coordinates::new(91.0, -122.4194);
         let result = service.validate_coordinates(&invalid_coords).await.unwrap();
         assert!(!result.is_valid);
         assert!(!result.validation_issues.is_empty());
