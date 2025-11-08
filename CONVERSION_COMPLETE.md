@@ -224,16 +224,17 @@ cargo build --bin location-service
 | Adapters | 2 | 145 | 0 |
 | Ports | 2 | 89 | 0 |
 | Service Binary | 1 | 382 | 0 |
+| Deployment | 4 | 1,005 | 12 |
 | Documentation | 3 | 734 | 0 |
 | Dependencies | 1 | 4 | 0 |
-| **Total** | **13** | **1,711** | **0** |
+| **Total** | **17** | **2,716** | **12** |
 
 ### Net Impact
 
-- **Lines Added**: 1,711
-- **Lines Removed**: 0
-- **Net Addition**: +1,711 lines (pure additions, no deletions)
-- **Files Created**: 10 new files
+- **Lines Added**: 2,716
+- **Lines Removed**: 12
+- **Net Addition**: +2,704 lines
+- **Files Created**: 14 new files
 - **Files Modified**: 3 existing files
 
 ## Git Commits
@@ -244,8 +245,9 @@ cargo build --bin location-service
 2. **077b1a6** - feat: Add NATS JetStream event sourcing infrastructure
 3. **9fc84fb** - feat: Add location-service NATS binary
 4. **9d373a5** - docs: Release v0.8.0 - Pure Functional CT/FRP Architecture
+5. **191a80d** - feat: Add container deployment support for Location Service
 
-**Total**: 4 commits, clean history
+**Total**: 5 commits, clean history
 
 ## Dependencies Added
 
@@ -299,23 +301,45 @@ $ location-service
 | Domain Purity | ✅ (refactored) | ✅ (already pure) | Better |
 | Breaking Changes | Yes (9 removed) | No | Better |
 | Migration Effort | Medium | Zero | Better |
-| Container Deploy | ✅ | ⏳ Next | Pending |
+| Container Deploy | ✅ | ✅ | Matching |
 
 **Location domain conversion was easier** because it already had pure boundaries!
 
+## Container Deployment ✅
+
+### Complete Deployment Support
+
+All three deployment methods fully implemented:
+
+**1. NixOS Container** (`deployment/nix/container.nix`):
+- Systemd service with security hardening
+- User/group management
+- Configurable via `services.location-service`
+- Build with: `nix build .#nixosConfigurations.location-container`
+
+**2. Proxmox LXC** (`deployment/nix/lxc.nix`):
+- Pre-configured LXC container
+- SSH access, minimal packages
+- Journal log rotation
+- Build with: `nix build .#location-lxc`
+
+**3. macOS launchd** (`deployment/nix/darwin.nix`):
+- nix-darwin module
+- KeepAlive and RunAtLoad
+- Log files at `/var/log/location-service.{log,error.log}`
+- Use in `darwin-configuration.nix`
+
+**Flake Outputs**:
+- `nixosModules.location-service` - NixOS module
+- `nixosConfigurations.location-container` - Container config
+- `nixosConfigurations.location-lxc` - LXC config
+- `packages.location-service` - Service binary
+- `packages.location-lxc` - LXC tarball
+- `darwinModules.location-service` - macOS module
+
+**Documentation**: Complete deployment guide at `deployment/CONTAINER_DEPLOYMENT.md`
+
 ## What's Not Included (Future Work)
-
-### Container Deployment ⏳
-
-Following items deferred to maintain focus:
-- NixOS container module
-- Proxmox LXC configuration
-- nix-darwin launchd service
-- `flake.nix` updates
-- Deployment guide
-
-**Reason**: Service binary is deployable via standard Rust deployment.
-**Timeline**: Can be added in v0.8.1 if needed.
 
 ### Full Command Handlers ⏳
 
@@ -400,7 +424,7 @@ The Location domain v0.8.0 conversion is **COMPLETE and SUCCESSFUL**. The domain
 
 1. ✅ **DONE**: Merge `ct-frp-conversion` to `main`
 2. ✅ **DONE**: Tag release `v0.8.0`
-3. ⏳ **Optional**: Add container deployment (v0.8.1)
+3. ✅ **DONE**: Add container deployment
 4. ⏳ **Optional**: Complete command handlers (v0.8.1)
 5. ⏳ **Next**: Apply same pattern to Person domain
 
