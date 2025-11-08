@@ -224,17 +224,17 @@ cargo build --bin location-service
 | Adapters | 2 | 145 | 0 |
 | Ports | 2 | 89 | 0 |
 | Service Binary | 1 | 382 | 0 |
-| Deployment | 4 | 1,005 | 12 |
-| Documentation | 3 | 734 | 0 |
+| Deployment | 5 | 1,838 | 13 |
+| Documentation | 4 | 1,374 | 0 |
 | Dependencies | 1 | 4 | 0 |
-| **Total** | **17** | **2,716** | **12** |
+| **Total** | **19** | **4,189** | **13** |
 
 ### Net Impact
 
-- **Lines Added**: 2,716
-- **Lines Removed**: 12
-- **Net Addition**: +2,704 lines
-- **Files Created**: 14 new files
+- **Lines Added**: 4,189
+- **Lines Removed**: 13
+- **Net Addition**: +4,176 lines
+- **Files Created**: 16 new files
 - **Files Modified**: 3 existing files
 
 ## Git Commits
@@ -246,8 +246,10 @@ cargo build --bin location-service
 3. **9fc84fb** - feat: Add location-service NATS binary
 4. **9d373a5** - docs: Release v0.8.0 - Pure Functional CT/FRP Architecture
 5. **191a80d** - feat: Add container deployment support for Location Service
+6. **a726f92** - docs: Update CONVERSION_COMPLETE.md with container deployment
+7. **11522d0** - feat: Add unified leaf node module for easy deployment
 
-**Total**: 5 commits, clean history
+**Total**: 7 commits, clean history
 
 ## Dependencies Added
 
@@ -309,7 +311,17 @@ $ location-service
 
 ### Complete Deployment Support
 
-All three deployment methods fully implemented:
+All deployment methods fully implemented:
+
+**Leaf Node Module** (`deployment/nix/leaf.nix`) - **PRIMARY METHOD**:
+- Unified module for both NixOS and nix-darwin leaf nodes
+- Platform detection with conditional configuration
+- Single import, works on both platforms
+- Simple configuration via `services.location-service`
+- Use with: `imports = [ cim-domain-location.leafModule ]`
+- Documentation: `deployment/LEAF_NODE_DEPLOYMENT.md`
+
+**Container Options** (Alternative deployment):
 
 **1. NixOS Container** (`deployment/nix/container.nix`):
 - Systemd service with security hardening
@@ -330,14 +342,17 @@ All three deployment methods fully implemented:
 - Use in `darwin-configuration.nix`
 
 **Flake Outputs**:
-- `nixosModules.location-service` - NixOS module
+- `leafModule` - **Unified leaf node module (recommended)**
+- `nixosModules.location-service` - NixOS container module
 - `nixosConfigurations.location-container` - Container config
 - `nixosConfigurations.location-lxc` - LXC config
 - `packages.location-service` - Service binary
 - `packages.location-lxc` - LXC tarball
 - `darwinModules.location-service` - macOS module
 
-**Documentation**: Complete deployment guide at `deployment/CONTAINER_DEPLOYMENT.md`
+**Documentation**:
+- `deployment/LEAF_NODE_DEPLOYMENT.md` - **Leaf node guide (start here)**
+- `deployment/CONTAINER_DEPLOYMENT.md` - Container deployment options
 
 ## What's Not Included (Future Work)
 
