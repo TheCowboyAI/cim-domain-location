@@ -1,6 +1,6 @@
 [package]
 name = "cim-domain-location"
-version = "0.7.8"
+version = "0.8.0"
 edition = "2021"
 authors = ["Cowboy AI, LLC <contact@cowboy.ai>"]
 description = "CIM-compliant location management system with geospatial services and hierarchical organization"
