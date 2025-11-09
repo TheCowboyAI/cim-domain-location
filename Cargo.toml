@@ -12,7 +12,7 @@ categories = ["data-structures", "asynchronous"]
 
 [dependencies]
 # Core dependencies
-cim-domain = { git = "https://github.com/TheCowboyAI/cim-domain.git", branch = "main" }
+cim-domain = { git = "https://github.com/TheCowboyAI/cim-domain.git", tag = "v0.8.0" }
 
 # Async runtime
 tokio = { version = "1.41", features = ["full"] }
