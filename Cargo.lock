@@ -275,8 +275,8 @@ dependencies = [
 
 [[package]]
 name = "cim-domain"
-version = "0.7.8"
-source = "git+https://github.com/TheCowboyAI/cim-domain.git?branch=main#b60b3a13f8501525e1b6886fd6ec09ee33b9da7b"
+version = "0.8.1"
+source = "git+https://github.com/TheCowboyAI/cim-domain.git?tag=v0.8.1#33414ffa877c3407c0ce0c9a24afadb42a808ff1"
 dependencies = [
  "anyhow",
  "async-trait",

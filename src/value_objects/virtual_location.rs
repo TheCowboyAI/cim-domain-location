@@ -3,6 +3,7 @@
 use cim_domain::{DomainError, DomainResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
 use std::net::IpAddr;
 use std::str::FromStr;
 use url::Url;
@@ -387,6 +388,63 @@ impl PortMapping {
             protocol,
             service,
             encrypted: true,
+        }
+    }
+}
+
+impl fmt::Display for VirtualLocationType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            VirtualLocationType::Website => write!(f, "Website"),
+            VirtualLocationType::ApiEndpoint => write!(f, "API Endpoint"),
+            VirtualLocationType::CloudService { provider, region } => {
+                write!(f, "Cloud Service ({}, {})", provider, region)
+            }
+            VirtualLocationType::Container { orchestrator, namespace } => {
+                write!(f, "Container ({}/{})", orchestrator, namespace)
+            }
+            VirtualLocationType::VirtualMachine => write!(f, "Virtual Machine"),
+            VirtualLocationType::NetworkDevice => write!(f, "Network Device"),
+            VirtualLocationType::MeetingRoom { platform } => {
+                write!(f, "Meeting Room ({})", platform)
+            }
+            VirtualLocationType::GameServer => write!(f, "Game Server"),
+            VirtualLocationType::BlockchainAddress { chain } => {
+                write!(f, "Blockchain Address ({})", chain)
+            }
+            VirtualLocationType::EmailServer => write!(f, "Email Server"),
+            VirtualLocationType::Custom(desc) => write!(f, "Custom ({})", desc),
+        }
+    }
+}
+
+impl fmt::Display for UrlType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            UrlType::Primary => write!(f, "Primary"),
+            UrlType::Api => write!(f, "API"),
+            UrlType::Documentation => write!(f, "Documentation"),
+            UrlType::Support => write!(f, "Support"),
+            UrlType::Status => write!(f, "Status"),
+            UrlType::Webhook => write!(f, "Webhook"),
+            UrlType::Cdn => write!(f, "CDN"),
+            UrlType::Mirror => write!(f, "Mirror"),
+            UrlType::Development => write!(f, "Development"),
+            UrlType::Custom(desc) => write!(f, "Custom ({})", desc),
+        }
+    }
+}
+
+impl fmt::Display for IpAddressType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            IpAddressType::Primary => write!(f, "Primary"),
+            IpAddressType::LoadBalancer => write!(f, "Load Balancer"),
+            IpAddressType::Failover => write!(f, "Failover"),
+            IpAddressType::Internal => write!(f, "Internal"),
+            IpAddressType::VpnEndpoint => write!(f, "VPN Endpoint"),
+            IpAddressType::NatGateway => write!(f, "NAT Gateway"),
+            IpAddressType::Custom(desc) => write!(f, "Custom ({})", desc),
         }
     }
 }
